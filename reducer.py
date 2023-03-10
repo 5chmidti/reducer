@@ -6,6 +6,7 @@ from shutil import copy
 from stat import S_IEXEC
 from subprocess import call
 from typing import Any
+from uuid import uuid4
 from rich.logging import RichHandler
 import logging
 from pathlib import Path
@@ -128,7 +129,7 @@ def main():
     real_build_dir = args.build_dir.resolve()
 
     build_dir: Path = real_build_dir
-    cwd = build_dir / "reducer/"
+    cwd = build_dir / ("reducer/" + str(uuid4().hex))
     cwd.mkdir(exist_ok=True)
 
     args.interesting_command = args.interesting_command.replace(
