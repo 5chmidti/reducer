@@ -101,7 +101,7 @@ def setup_test_folder(args: Namespace, cwd: Path):
     if args.preprocess:
         call(
             compile_commands[0]["command"]
-            .replace("-o output.cpp.o", f"-E -P -o {file_path}")
+            .replace("-o output.cpp.o", f"-E -P -o {cwd / file_path.name}")
             .split(" ")
         )
     create_interestingness_test(args, cwd, compile_commands[0]["command"])
