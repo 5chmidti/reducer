@@ -70,7 +70,9 @@ def get_compile_commands_for_file(args: Namespace, cwd: Path):
     raw_commands = raw_commands.replace(str(file_path), str(new_file_path))
     raw_commands = re.sub(r"-o .*\.o", "-o output.cpp.o", raw_commands)
     raw_commands = raw_commands.replace("-c ", f"-I{file_path.parent} -c ")
-    raw_commands = raw_commands.replace("-c ", "-Wfatal-errors -c")
+    raw_commands = raw_commands.replace(
+        "-c ", "-Wfatal-errors -Wno-invalid-constexpr -w -c "
+    )
     raw_commands = raw_commands.replace("-Werror", "")
 
     commands = json.loads(raw_commands)
