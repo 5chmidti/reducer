@@ -52,6 +52,7 @@ def init_argparse() -> ArgumentParser:
         "--preprocess",
         help="run preprocessor on source file",
         action=BooleanOptionalAction,
+        default=True,
         required=False,
         type=bool,
     )
