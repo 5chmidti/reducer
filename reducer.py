@@ -133,11 +133,17 @@ def setup_test_folder(args: Namespace, cwd: Path):
     file_path: Path = args.source_file
     copy(file_path, cwd / file_path.name)
     if args.preprocess:
-        call(
+        c = (
             compile_commands[0]["command"]
-            .replace("-o output.cpp.o", f"-E -P -o {cwd / file_path.name}")
+            .replace("-o output.cpp.o", f"-E -P -o {cwd / file_path.name}.tmp")
             .split(" ")
         )
+
+        log.info(c)
+
+        call(c)
+        copy(f"{cwd / file_path.name}.tmp", f"{cwd / file_path.name}")
+
     create_interestingness_test(args, cwd, compile_commands[0]["command"])
 
 
