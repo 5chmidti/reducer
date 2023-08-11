@@ -115,6 +115,8 @@ def create_interestingness_test(args: Namespace, cwd: Path, compile_command: str
             return
 
         file.write("#!/bin/bash\n")
+
+        compile_command = compile_command + " -Wfatal-errors "
         file.write(compile_command + " && ")
         file.write(
             f"{args.interesting_command.replace(str(args.source_file),str(cwd / args.source_file.name))}\n"
