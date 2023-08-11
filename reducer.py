@@ -39,7 +39,7 @@ def init_argparse() -> ArgumentParser:
     parser.add_argument(
         "--build-dir",
         help="build directory of project",
-        required=True,
+        required=False,
         type=Path,
     )
     parser.add_argument(
@@ -63,6 +63,12 @@ def init_argparse() -> ArgumentParser:
         default=True,
         required=False,
         type=bool,
+    )
+    parser.add_argument(
+        "--rerun-existing",
+        help="run a reduction on an existing reducer folder",
+        required=False,
+        type=str,
     )
     return parser
 
@@ -156,36 +162,44 @@ def reduce_input(args: Namespace, cwd: Path):
 
     log.info(invocation)
 
-    setup_test_folder(args, cwd)
+    if not args.rerun_existing:
+        setup_test_folder(args, cwd)
     call(invocation, cwd=cwd)
 
 
 def main():
     parser = init_argparse()
     args = parser.parse_args()
-
-    real_source_file = args.source_file.resolve()
-    real_build_dir = args.build_dir.resolve()
-
-    build_dir: Path = real_build_dir
-    cwd = build_dir / ("reducer/" + str(uuid4().hex))
-    cwd.mkdir(exist_ok=True, parents=True)
-
-    args.interesting_command = args.interesting_command.replace(
-        str(Path(args.source_file).absolute()),
-        str(real_source_file.name),
-    )
-
-    args.interesting_command = args.interesting_command.replace(
-        str(Path(args.build_dir).absolute()), str(cwd)
-    )
-
-    args.source_file = real_source_file
-    args.build_dir = real_build_dir
-
     log.info(f"{args}")
 
-    reduce_input(args, cwd)
+    if  args.rerun_existing:
+        existing_path = Path(args.rerun_existing)
+        if not existing_path.exists():
+            log.error(f"path of rerun_existing does not exist: {existing_path}")
+        cwd = existing_path
+        reduce_input(args, cwd)
+    else:
+        real_source_file = args.source_file.resolve()
+        real_build_dir = args.build_dir.resolve()
+
+        build_dir: Path = real_build_dir
+
+        cwd = build_dir / ("reducer/" + str(uuid4().hex))
+        cwd.mkdir(exist_ok=True, parents=True)
+
+        args.interesting_command = args.interesting_command.replace(
+            str(Path(args.source_file).absolute()),
+            str(real_source_file.name),
+        )
+
+        args.interesting_command = args.interesting_command.replace(
+            str(Path(args.build_dir).absolute()), str(cwd)
+        )
+
+        args.source_file = real_source_file
+        args.build_dir = real_build_dir
+
+        reduce_input(args, cwd)
 
 
 if __name__ == "__main__":
