@@ -45,8 +45,16 @@ def init_argparse() -> ArgumentParser:
     parser.add_argument(
         "--interesting-command",
         help="command satisfying interestingness test properties",
-        required=True,
+        required=False,
         type=str,
+    )
+    parser.add_argument(
+        "--compile-error",
+        help="build is the interesting command",
+        default=False,
+        required=False,
+        type=bool,
+        action=BooleanOptionalAction
     )
     parser.add_argument(
         "--preprocess",
@@ -89,6 +97,17 @@ def write_compile_commands(compile_commands: Any, cwd: Path):
 
 def create_interestingness_test(args: Namespace, cwd: Path, compile_command: str):
     with open(f"{cwd}/test.sh", "w") as file:
+        if args.compile_error:
+            file.write("#!/bin/bash\n")
+            file.write(
+                "! "
+                +
+                compile_command
+                + ' -fno-color-diagnostics > log.txt 2>&1 && grep ": fatal error: ambiguous partial specializations of \'formatter<boost::container::flat_set<int>>\'" log.txt && grep "1 error generated" log.txt'
+            )
+            chmod(file.name, stat(file.name).st_mode | S_IEXEC)
+            return
+
         file.write("#!/bin/bash\n")
         file.write(compile_command + " && ")
         file.write(
