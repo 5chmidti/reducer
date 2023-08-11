@@ -89,6 +89,10 @@ def get_compile_commands_for_file(args: Namespace, cwd: Path):
     return [res]
 
 
+def remove_explicit_path(compile_command:str, cwd: Path) ->str:
+    return compile_command.replace(str(cwd)+"/","")
+
+
 def write_compile_commands(compile_commands: Any, cwd: Path):
     new_compile_commands_path = cwd.absolute() / "compile_commands.json"
     with open(str(new_compile_commands_path), "w") as file:
@@ -96,6 +100,8 @@ def write_compile_commands(compile_commands: Any, cwd: Path):
 
 
 def create_interestingness_test(args: Namespace, cwd: Path, compile_command: str):
+    compile_command = remove_explicit_path(compile_command, cwd)
+
     with open(f"{cwd}/test.sh", "w") as file:
         if args.compile_error:
             file.write("#!/bin/bash\n")
