@@ -172,11 +172,12 @@ def main():
     cwd.mkdir(exist_ok=True, parents=True)
 
     args.interesting_command = args.interesting_command.replace(
-        str(args.source_file), str(cwd / real_source_file.name)
+        str(Path(args.source_file).absolute()),
+        str(real_source_file.name),
     )
 
     args.interesting_command = args.interesting_command.replace(
-        str(args.build_dir), str(cwd)
+        str(Path(args.build_dir).absolute()), str(cwd)
     )
 
     args.source_file = real_source_file
