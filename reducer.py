@@ -169,7 +169,7 @@ def main():
 
     build_dir: Path = real_build_dir
     cwd = build_dir / ("reducer/" + str(uuid4().hex))
-    cwd.mkdir(exist_ok=True)
+    cwd.mkdir(exist_ok=True, parents=True)
 
     args.interesting_command = args.interesting_command.replace(
         str(args.source_file), str(cwd / real_source_file.name)
