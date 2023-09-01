@@ -94,7 +94,7 @@ def get_compile_commands_entry_for_file(args: Namespace, build_dir: Path, cwd: P
     log.info(str(new_file_path))
     raw_commands = compile_commands_file.read_text()
     raw_commands = raw_commands.replace(str(file_path), str(new_file_path))
-    raw_commands = re.sub(r"-o .*\.o", "-o output.cpp.o", raw_commands)
+    raw_commands = re.sub(r"-o [^ ]*\.o", "-o output.cpp.o", raw_commands)
     raw_commands = raw_commands.replace("-c ", f"-I{file_path.parent} -c ")
     raw_commands = raw_commands.replace(
         "-c ", "-Wfatal-errors -Wno-invalid-constexpr -w -c "
@@ -102,9 +102,8 @@ def get_compile_commands_entry_for_file(args: Namespace, build_dir: Path, cwd: P
     raw_commands = raw_commands.replace("-Werror", "")
 
     commands = json.loads(raw_commands)
-    res = next(x for x in commands if x["file"] == str(new_file_path))
-    log.info(res)
-    return [res]
+    res = [x for x in commands if x["file"] == str(new_file_path)]
+    return res
 
 
 def remove_explicit_path(compile_command:str, cwd: Path) ->str:
