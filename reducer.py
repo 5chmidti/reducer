@@ -77,6 +77,12 @@ def init_argparse() -> ArgumentParser:
         required=False,
         type=int,
     )
+    parser.add_argument(
+        "--timeout",
+        help="timeout for the interestingness command",
+        required=False,
+        type=int,
+    )
     return parser
 
 
@@ -171,6 +177,9 @@ def reduce_input(args: Namespace, cwd: Path):
         invocation.append(f"--n={args.jobs}")
     else:
         invocation.append(f"--n={cpu_count()}")
+
+    if args.timeout:
+        invocation.append(f"--timeout={args.timeout}")
 
 
     log.info(invocation)
