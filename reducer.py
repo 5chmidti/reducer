@@ -10,6 +10,7 @@ from uuid import uuid4
 from rich.logging import RichHandler
 import logging
 from pathlib import Path
+from multiprocessing import cpu_count
 
 
 FORMAT = "%(message)s"
@@ -69,6 +70,12 @@ def init_argparse() -> ArgumentParser:
         help="run a reduction on an existing reducer folder",
         required=False,
         type=str,
+    )
+    parser.add_argument(
+        "--jobs",
+        help="number of jobs to run with the reducer",
+        required=False,
+        type=int,
     )
     return parser
 
@@ -159,6 +166,12 @@ def reduce_input(args: Namespace, cwd: Path):
         "test.sh",
         args.source_file.name,
     ]
+
+    if args.jobs:
+        invocation.append(f"--n={args.jobs}")
+    else:
+        invocation.append(f"--n={cpu_count()}")
+
 
     log.info(invocation)
 
