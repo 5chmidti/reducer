@@ -179,8 +179,7 @@ def load_compile_commands(dir: Path):
 def reduce_input(args: Namespace, cwd: Path):
     invocation: list[str] = [
         args.reduce_bin,
-        "test.sh",
-        args.source_file.name,
+        "--to-utf8",
     ]
 
     if args.jobs:
@@ -191,6 +190,8 @@ def reduce_input(args: Namespace, cwd: Path):
     if args.timeout:
         invocation.append(f"--timeout={args.timeout}")
 
+    invocation.append("test.sh")
+    invocation.append(args.source_file.name)
 
     log.info(invocation)
 
