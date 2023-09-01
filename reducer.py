@@ -133,7 +133,7 @@ def create_interestingness_test(args: Namespace, cwd: Path, compile_command: str
 
         file.write("#!/bin/bash\n")
 
-        compile_command = compile_command + " -Wfatal-errors "
+        compile_command = compile_command + " -Wfatal-errors -fno-color-diagnostics > log.txt 2>&1"
         file.write(compile_command + " && ")
 
         interesting_command =  args.interesting_command.replace(str(args.source_file),str(args.source_file.name))
