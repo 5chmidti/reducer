@@ -58,6 +58,12 @@ def init_argparse() -> ArgumentParser:
         action=BooleanOptionalAction
     )
     parser.add_argument(
+        "--verifying-compiler",
+        help="compiler that checks if the reduced code is still correct",
+        required=False,
+        type=str,
+    )
+    parser.add_argument(
         "--preprocess",
         help="run preprocessor on source file",
         action=BooleanOptionalAction,
@@ -120,21 +126,20 @@ def create_interestingness_test(args: Namespace, cwd: Path, compile_command: str
     compile_command = remove_explicit_path(compile_command, cwd)
 
     with open(f"{cwd}/test.sh", "w") as file:
+        file.write("#!/bin/bash\n")
+
         if args.compile_error:
-            file.write("#!/bin/bash\n")
+            if args.verifying_compiler:
+                compile_command_without_compiler = compile_command[compile_command.find(" "):]
+                file.write(args.verifying_compiler + f" {compile_command_without_compiler}")
             file.write(
                 "! "
                 +
                 compile_command
-                + ' -fno-color-diagnostics > log.txt 2>&1 && grep ": fatal error: ambiguous partial specializations of \'formatter<boost::container::flat_set<int>>\'" log.txt && grep "1 error generated" log.txt'
+                + ' -fno-color-diagnostics > log.txt 2>&1 && '
             )
-            chmod(file.name, stat(file.name).st_mode | S_IEXEC)
-            return
-
-        file.write("#!/bin/bash\n")
-
-        compile_command = compile_command + " -Wfatal-errors -fno-color-diagnostics > log.txt 2>&1"
-        file.write(compile_command + " && ")
+        else:
+            file.write(compile_command + " -Wfatal-errors -fno-color-diagnostics > log.txt 2>&1 && ")
 
         interesting_command =  args.interesting_command.replace(str(args.source_file),str(args.source_file.name))
         interesting_command = re.sub(r"-p [^ ]*", f"-p {str(cwd)}", interesting_command)
