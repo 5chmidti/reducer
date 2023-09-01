@@ -61,7 +61,7 @@ def init_argparse() -> ArgumentParser:
         "--preprocess",
         help="run preprocessor on source file",
         action=BooleanOptionalAction,
-        default=True,
+        default=False,
         required=False,
         type=bool,
     )
@@ -86,9 +86,8 @@ def init_argparse() -> ArgumentParser:
     return parser
 
 
-def get_compile_commands_for_file(args: Namespace, cwd: Path):
+def get_compile_commands_entry_for_file(args: Namespace, build_dir: Path, cwd: Path):
     file_path: Path = args.source_file
-    build_dir = args.build_dir
 
     compile_commands_file = build_dir / "compile_commands.json"
     new_file_path = cwd.absolute() / str(file_path.name)
@@ -147,23 +146,35 @@ def create_interestingness_test(args: Namespace, cwd: Path, compile_command: str
 
 
 def setup_test_folder(args: Namespace, cwd: Path):
-    compile_commands = get_compile_commands_for_file(args, cwd)
+    compile_commands = get_compile_commands_entry_for_file(args, args.build_dir, cwd)
     write_compile_commands(compile_commands, cwd)
     file_path: Path = args.source_file
     copy(file_path, cwd / file_path.name)
+    compile_command = compile_commands[0]["command"]
     if args.preprocess:
-        c = (
-            compile_commands[0]["command"]
+        preprocess_file(cwd, file_path, compile_command)
+
+    create_interestingness_test(args, cwd, compile_command)
+
+def preprocess_file(cwd: Path, file_path: Path, compile_command: str):
+    c = (
+            compile_command
             .replace("-o output.cpp.o", f"-E -P -o {cwd / file_path.name}.tmp")
             .split(" ")
         )
 
-        log.info(c)
+    log.info(c)
 
-        call(c)
-        copy(f"{cwd / file_path.name}.tmp", f"{cwd / file_path.name}")
+    call(c)
+    copy(f"{cwd / file_path.name}.tmp", f"{cwd / file_path.name}")
 
-    create_interestingness_test(args, cwd, compile_commands[0]["command"])
+
+def load_compile_commands(dir: Path):
+    compile_commands_file = dir / "compile_commands.json"
+    compile_commands_raw = compile_commands_file.read_text()
+    return json.loads(compile_commands_raw)
+
+
 
 
 def reduce_input(args: Namespace, cwd: Path):
@@ -184,9 +195,49 @@ def reduce_input(args: Namespace, cwd: Path):
 
     log.info(invocation)
 
-    if not args.rerun_existing:
-        setup_test_folder(args, cwd)
     call(invocation, cwd=cwd)
+
+
+def reduce_existing(args: Namespace):
+    existing_path = Path(args.rerun_existing)
+
+    if not existing_path.exists():
+        log.error(f"path of rerun_existing does not exist: {existing_path}")
+        return
+
+    if args.preprocess:
+        compile_commands = load_compile_commands(existing_path)
+        compile_command: str = compile_commands[0]["command"]
+        file_path: Path = args.source_file
+        preprocess_file(existing_path, file_path, compile_command)
+
+    reduce_input(args, existing_path)
+
+
+def reduce_new(args: Namespace):
+    real_source_file = args.source_file.resolve()
+    real_build_dir = args.build_dir.resolve()
+
+    build_dir: Path = real_build_dir
+
+    cwd = build_dir / ("reducer/" + str(uuid4().hex))
+    cwd.mkdir(exist_ok=True, parents=True)
+
+    if args.interesting_command:
+        args.interesting_command = args.interesting_command.replace(
+                str(Path(args.source_file).absolute()),
+                str(real_source_file.name),
+            )
+
+        args.interesting_command = args.interesting_command.replace(
+                str(Path(args.build_dir).absolute()), str(cwd)
+            )
+
+    args.source_file = real_source_file
+    args.build_dir = real_build_dir
+
+    setup_test_folder(args, cwd)
+    reduce_input(args, cwd)
 
 
 def main():
@@ -194,34 +245,10 @@ def main():
     args = parser.parse_args()
     log.info(f"{args}")
 
-    if  args.rerun_existing:
-        existing_path = Path(args.rerun_existing)
-        if not existing_path.exists():
-            log.error(f"path of rerun_existing does not exist: {existing_path}")
-        cwd = existing_path
-        reduce_input(args, cwd)
+    if args.rerun_existing:
+        reduce_existing(args)
     else:
-        real_source_file = args.source_file.resolve()
-        real_build_dir = args.build_dir.resolve()
-
-        build_dir: Path = real_build_dir
-
-        cwd = build_dir / ("reducer/" + str(uuid4().hex))
-        cwd.mkdir(exist_ok=True, parents=True)
-
-        args.interesting_command = args.interesting_command.replace(
-            str(Path(args.source_file).absolute()),
-            str(real_source_file.name),
-        )
-
-        args.interesting_command = args.interesting_command.replace(
-            str(Path(args.build_dir).absolute()), str(cwd)
-        )
-
-        args.source_file = real_source_file
-        args.build_dir = real_build_dir
-
-        reduce_input(args, cwd)
+        reduce_new(args)
 
 
 if __name__ == "__main__":
