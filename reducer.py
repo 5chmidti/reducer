@@ -174,11 +174,20 @@ def load_compile_commands(dir: Path):
     return json.loads(compile_commands_raw)
 
 
+def get_cpp_std_from_compile_commands(cwd: Path):
+    cpp_std = "c++20"
+    compile_commands = load_compile_commands(cwd)
+    compile_command: str = compile_commands[0]["command"]
+    cpp_std_pos = compile_command.find("-std=")
+    if cpp_std_pos!=-1:
+        cpp_std = compile_command[cpp_std_pos:cpp_std_pos+6]
+    return cpp_std
 
 
 def reduce_input(args: Namespace, cwd: Path):
     invocation: list[str] = [
         args.reduce_bin,
+        f"--clang-delta-std={get_cpp_std_from_compile_commands(cwd)}",
         "--to-utf8",
     ]
 
