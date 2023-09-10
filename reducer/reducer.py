@@ -189,8 +189,12 @@ def get_cpp_std_from_compile_commands(cwd: Path):
     compile_commands = load_compile_commands(cwd)
     compile_command: str = compile_commands[0]["command"]
     cpp_std_pos = compile_command.find("-std=")
-    if cpp_std_pos!=-1:
-        cpp_std = compile_command[cpp_std_pos:cpp_std_pos+6]
+    if cpp_std_pos != -1:
+        is_gnu = compile_command[cpp_std_pos + 5] == "g"
+        if is_gnu:
+            cpp_std = f"c++{compile_command[cpp_std_pos + 10 : cpp_std_pos + 12]}"
+        else:
+            cpp_std = f"{compile_command[cpp_std_pos + 6 : cpp_std_pos + 11]}"
     return cpp_std
 
 
