@@ -213,13 +213,11 @@ def get_cpp_std_from_compile_commands(cwd: Path):
 
 
 def reduce_input(args: Namespace, cwd: Path):
-    invocation: list[str] = [
-        args.reduce_bin,
-        "--to-utf8",
-    ]
+    invocation: list[str] = [args.reduce_bin]
 
     if "cvise" in args.reduce_bin:
         invocation.append(f"--clang-delta-std={get_cpp_std_from_compile_commands(cwd)}")
+        invocation.append("--to-utf8")
 
     if args.jobs:
         invocation.append(f"--n={args.jobs}")
