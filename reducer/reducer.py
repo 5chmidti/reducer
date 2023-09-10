@@ -261,9 +261,7 @@ def reduce_new(args: Namespace):
     real_source_file = args.source_file.resolve()
     real_build_dir = args.build_dir.resolve()
 
-    build_dir: Path = real_build_dir
-
-    cwd = build_dir / ("reducer/" + str(uuid4().hex))
+    cwd = real_build_dir / ("reducer/" + str(uuid4().hex))
     cwd.mkdir(exist_ok=True, parents=True)
 
     if args.interesting_command:
