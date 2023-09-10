@@ -38,7 +38,7 @@ class TestReducer(TestCase):
                 "--build-dir",
                 f"{self.build_dir}",
                 "--interesting-command",
-                f"clang-tidy -p {self.build_dir} --checks=\"-*,readability-const-return-type\" {self.project_dir}/src/main.cpp 2>&1 | grep 'readability-const-return-type'",
+                f"clang-tidy -p {self.build_dir} --checks=\"-*,readability-const-return-type\" $FILE 2>&1 | grep 'readability-const-return-type'",
             ]
         )
 

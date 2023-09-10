@@ -140,6 +140,8 @@ def create_interestingness_test(args: Namespace, cwd: Path, compile_command: str
     with open(f"{cwd}/test.sh", "w") as file:
         file.write("#!/bin/bash\n")
 
+        file.write(f'FILE="{cwd / args.source_file.name}"\n')
+
         if args.compile_error:
             if args.verifying_compiler:
                 compile_command_without_compiler = compile_command[
@@ -256,24 +258,16 @@ def reduce_existing(args: Namespace):
 def reduce_new(args: Namespace):
     set_reduce_bin(args)
 
-    real_source_file = args.source_file.resolve()
-    real_build_dir = args.build_dir.resolve()
+    args.source_file = args.source_file.resolve()
+    args.build_dir = args.build_dir.resolve()
 
-    cwd = real_build_dir / ("reducer/" + str(uuid4().hex))
+    cwd = args.build_dir / ("reducer/" + str(uuid4().hex))
     cwd.mkdir(exist_ok=True, parents=True)
 
     if args.interesting_command:
         args.interesting_command = args.interesting_command.replace(
-            str(Path(args.source_file).absolute()),
-            str(real_source_file.name),
+            str(args.build_dir), str(cwd)
         )
-
-        args.interesting_command = args.interesting_command.replace(
-            str(Path(args.build_dir).absolute()), str(cwd)
-        )
-
-    args.source_file = real_source_file
-    args.build_dir = real_build_dir
 
     setup_test_folder(args, cwd)
     reduce_input(args, cwd)
