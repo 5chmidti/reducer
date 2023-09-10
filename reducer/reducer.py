@@ -55,7 +55,7 @@ def init_argparse() -> ArgumentParser:
         default=False,
         required=False,
         type=bool,
-        action=BooleanOptionalAction
+        action=BooleanOptionalAction,
     )
     parser.add_argument(
         "--verifying-compiler",
@@ -103,7 +103,7 @@ def get_compile_commands_entry_for_file(args: Namespace, build_dir: Path, cwd: P
     raw_commands = re.sub(r"-o [^ ]*\.o", "-o output.cpp.o", raw_commands)
     raw_commands = raw_commands.replace("-c ", f"-I{file_path.parent} -c ")
     raw_commands = raw_commands.replace(
-        "-c ", "-Wfatal-errors -Wno-invalid-constexpr -w -c "
+        "-c ", "-Wfatal-errors -Wno-invalid-constexpr -c "
     )
     raw_commands = raw_commands.replace("-Werror", "")
 
@@ -112,8 +112,8 @@ def get_compile_commands_entry_for_file(args: Namespace, build_dir: Path, cwd: P
     return res
 
 
-def remove_explicit_path(compile_command:str, cwd: Path) ->str:
-    return compile_command.replace(str(cwd)+"/","")
+def remove_explicit_path(compile_command: str, cwd: Path) -> str:
+    return compile_command.replace(str(cwd) + "/", "")
 
 
 def write_compile_commands(compile_commands: Any, cwd: Path):
@@ -130,24 +130,28 @@ def create_interestingness_test(args: Namespace, cwd: Path, compile_command: str
 
         if args.compile_error:
             if args.verifying_compiler:
-                compile_command_without_compiler = compile_command[compile_command.find(" "):]
-                file.write(args.verifying_compiler + f" {compile_command_without_compiler}")
+                compile_command_without_compiler = compile_command[
+                    compile_command.find(" ") :
+                ]
+                file.write(
+                    args.verifying_compiler + f" {compile_command_without_compiler}"
+                )
             file.write(
-                "! "
-                +
-                compile_command
-                + ' -fno-color-diagnostics > log.txt 2>&1 && '
+                "! " + compile_command + " -fno-color-diagnostics > log.txt 2>&1 && "
             )
         else:
-            file.write(compile_command + " -Wfatal-errors -fno-color-diagnostics > log.txt 2>&1 && ")
+            file.write(
+                compile_command
+                + " -Wfatal-errors -fno-color-diagnostics > log.txt 2>&1 && "
+            )
 
-        interesting_command =  args.interesting_command.replace(str(args.source_file),str(args.source_file.name))
+        interesting_command = args.interesting_command.replace(
+            str(args.source_file), str(args.source_file.name)
+        )
         interesting_command = re.sub(r"-p [^ ]*", f"-p {str(cwd)}", interesting_command)
         log.info(f"interesting_command: {interesting_command}")
 
-        file.write(
-            f"{interesting_command}\n"
-        )
+        file.write(f"{interesting_command}\n")
         chmod(file.name, stat(file.name).st_mode | S_IEXEC)
 
 
@@ -162,12 +166,11 @@ def setup_test_folder(args: Namespace, cwd: Path):
 
     create_interestingness_test(args, cwd, compile_command)
 
+
 def preprocess_file(cwd: Path, file_path: Path, compile_command: str):
-    c = (
-            compile_command
-            .replace("-o output.cpp.o", f"-E -P -o {cwd / file_path.name}.tmp")
-            .split(" ")
-        )
+    c = compile_command.replace(
+        "-o output.cpp.o", f"-E -P -o {cwd / file_path.name}.tmp"
+    ).split(" ")
 
     log.info(c)
 
@@ -243,13 +246,13 @@ def reduce_new(args: Namespace):
 
     if args.interesting_command:
         args.interesting_command = args.interesting_command.replace(
-                str(Path(args.source_file).absolute()),
-                str(real_source_file.name),
-            )
+            str(Path(args.source_file).absolute()),
+            str(real_source_file.name),
+        )
 
         args.interesting_command = args.interesting_command.replace(
-                str(Path(args.build_dir).absolute()), str(cwd)
-            )
+            str(Path(args.build_dir).absolute()), str(cwd)
+        )
 
     args.source_file = real_source_file
     args.build_dir = real_build_dir
