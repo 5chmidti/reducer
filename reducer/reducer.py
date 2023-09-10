@@ -108,7 +108,7 @@ def set_reduce_bin(args: Namespace):
 
 def get_compile_commands_entry_for_file(source_file: Path, build_dir: Path, cwd: Path):
     compile_commands_file = build_dir / "compile_commands.json"
-    new_file_path = cwd.absolute() / str(source_file.name)
+    new_file_path = cwd.absolute() / source_file.name
     log.info(str(new_file_path))
     raw_commands = compile_commands_file.read_text()
     raw_commands = raw_commands.replace(str(source_file), str(new_file_path))
@@ -160,7 +160,7 @@ def create_interestingness_test(args: Namespace, cwd: Path, compile_command: str
             )
 
         interesting_command = args.interesting_command.replace(
-            str(args.source_file), str(args.source_file.name)
+            str(args.source_file), args.source_file.name
         )
         interesting_command = re.sub(r"-p [^ ]*", f"-p {str(cwd)}", interesting_command)
         log.info(f"interesting_command: {interesting_command}")
