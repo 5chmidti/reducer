@@ -2,7 +2,7 @@ from argparse import ArgumentParser, Namespace, BooleanOptionalAction
 import json
 from os import chmod, stat
 import re
-from shutil import copy
+from shutil import copy, which
 from stat import S_IEXEC
 from subprocess import call
 from typing import Any
@@ -34,7 +34,6 @@ def init_argparse() -> ArgumentParser:
         "--reduce-bin",
         help="binary to use for reduction",
         required=False,
-        default="cvise",
         type=str,
     )
     parser.add_argument(
@@ -90,6 +89,21 @@ def init_argparse() -> ArgumentParser:
         type=int,
     )
     return parser
+
+
+def set_reduce_bin(args: Namespace):
+    if args.reduce_bin:
+        return
+
+    if which("cvise"):
+        args.reduce_bin = "cvise"
+        return
+
+    if which("creduce"):
+        args.reduce_bin = "creduce"
+        return
+
+    raise RuntimeError("Could not find reduction binaries cvise or creduce")
 
 
 def get_compile_commands_entry_for_file(source_file: Path, build_dir: Path, cwd: Path):
@@ -224,6 +238,8 @@ def reduce_input(args: Namespace, cwd: Path):
 
 
 def reduce_existing(args: Namespace):
+    set_reduce_bin(args)
+
     existing_path = Path(args.rerun_existing)
 
     if not existing_path.exists():
@@ -240,6 +256,8 @@ def reduce_existing(args: Namespace):
 
 
 def reduce_new(args: Namespace):
+    set_reduce_bin(args)
+
     real_source_file = args.source_file.resolve()
     real_build_dir = args.build_dir.resolve()
 
@@ -268,6 +286,7 @@ def reduce_new(args: Namespace):
 def main():
     parser = init_argparse()
     args = parser.parse_args()
+
     log.info(f"{args}")
 
     if args.rerun_existing:
