@@ -92,16 +92,14 @@ def init_argparse() -> ArgumentParser:
     return parser
 
 
-def get_compile_commands_entry_for_file(args: Namespace, build_dir: Path, cwd: Path):
-    file_path: Path = args.source_file
-
+def get_compile_commands_entry_for_file(source_file: Path, build_dir: Path, cwd: Path):
     compile_commands_file = build_dir / "compile_commands.json"
-    new_file_path = cwd.absolute() / str(file_path.name)
+    new_file_path = cwd.absolute() / str(source_file.name)
     log.info(str(new_file_path))
     raw_commands = compile_commands_file.read_text()
-    raw_commands = raw_commands.replace(str(file_path), str(new_file_path))
+    raw_commands = raw_commands.replace(str(source_file), str(new_file_path))
     raw_commands = re.sub(r"-o [^ ]*\.o", "-o output.cpp.o", raw_commands)
-    raw_commands = raw_commands.replace("-c ", f"-I{file_path.parent} -c ")
+    raw_commands = raw_commands.replace("-c ", f"-I{source_file.parent} -c ")
     raw_commands = raw_commands.replace(
         "-c ", "-Wfatal-errors -Wno-invalid-constexpr -c "
     )
@@ -156,7 +154,9 @@ def create_interestingness_test(args: Namespace, cwd: Path, compile_command: str
 
 
 def setup_test_folder(args: Namespace, cwd: Path):
-    compile_commands = get_compile_commands_entry_for_file(args, args.build_dir, cwd)
+    compile_commands = get_compile_commands_entry_for_file(
+        args.source_file, args.build_dir, cwd
+    )
     write_compile_commands(compile_commands, cwd)
     file_path: Path = args.source_file
     copy(file_path, cwd / file_path.name)
