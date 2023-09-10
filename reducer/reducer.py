@@ -74,7 +74,7 @@ def init_argparse() -> ArgumentParser:
         "--rerun-existing",
         help="run a reduction on an existing reducer folder",
         required=False,
-        type=str,
+        type=Path,
     )
     parser.add_argument(
         "--jobs",
@@ -240,7 +240,7 @@ def reduce_input(args: Namespace, cwd: Path):
 def reduce_existing(args: Namespace):
     set_reduce_bin(args)
 
-    existing_path = Path(args.rerun_existing)
+    existing_path = args.rerun_existing
 
     if not existing_path.exists():
         log.error(f"path of rerun_existing does not exist: {existing_path}")
