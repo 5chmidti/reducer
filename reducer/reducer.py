@@ -151,21 +151,25 @@ def create_interestingness_test(args: Namespace, cwd: Path, compile_command: str
                     args.verifying_compiler + f" {compile_command_without_compiler}"
                 )
             file.write(
-                "! " + compile_command + " -fno-color-diagnostics > log.txt 2>&1 && "
+                "! " + compile_command + " -fno-color-diagnostics > log.txt 2>&1"
             )
         else:
             file.write(
                 compile_command
-                + " -Wfatal-errors -fno-color-diagnostics > log.txt 2>&1 && "
+                + " -Wfatal-errors -fno-color-diagnostics > log.txt 2>&1"
             )
 
-        interesting_command = args.interesting_command.replace(
-            str(args.source_file), args.source_file.name
-        )
-        interesting_command = re.sub(r"-p [^ ]*", f"-p {str(cwd)}", interesting_command)
-        log.info(f"interesting_command: {interesting_command}")
+        if args.interesting_command:
+            interesting_command = args.interesting_command.replace(
+                str(args.source_file), args.source_file.name
+            )
+            interesting_command = re.sub(
+                r"-p [^ ]*", f"-p {str(cwd)}", interesting_command
+            )
+            log.info(f"interesting_command: {interesting_command}")
 
-        file.write(f"{interesting_command}\n")
+            file.write(f" && {interesting_command}\n")
+
         chmod(file.name, stat(file.name).st_mode | S_IEXEC)
 
 
