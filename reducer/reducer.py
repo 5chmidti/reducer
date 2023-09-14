@@ -4,7 +4,7 @@ from os import chmod, stat
 import re
 from shutil import copy, which
 from stat import S_IEXEC
-from subprocess import call
+from subprocess import call, run
 from typing import Any
 from uuid import uuid4
 from rich.logging import RichHandler
@@ -59,6 +59,12 @@ def init_argparse() -> ArgumentParser:
     parser.add_argument(
         "--verifying-compiler",
         help="compiler that checks if the reduced code is still correct",
+        required=False,
+        type=str,
+    )
+    parser.add_argument(
+        "--verifying-compiler-args",
+        help="arguments to call the verifying compiler with instead of the arguments from the crashing compiler. use $FILE to reference the source file",
         required=False,
         type=str,
     )
@@ -144,12 +150,14 @@ def create_interestingness_test(args: Namespace, cwd: Path, compile_command: str
 
         if args.compile_error:
             if args.verifying_compiler:
-                compile_command_without_compiler = compile_command[
-                    compile_command.find(" ") :
-                ]
-                file.write(
-                    args.verifying_compiler + f" {compile_command_without_compiler} && "
-                )
+                verifying_compiler_args: str
+                if args.verifying_compiler_args:
+                    verifying_compiler_args = args.verifying_compiler_args
+                else:
+                    verifying_compiler_args = compile_command[
+                        compile_command.find(" ") :
+                    ]
+                file.write(args.verifying_compiler + f" {verifying_compiler_args} && ")
             file.write(
                 "! " + compile_command + " -fno-color-diagnostics > log.txt 2>&1"
             )
@@ -284,6 +292,9 @@ def reduce_new(args: Namespace):
 def main():
     parser = init_argparse()
     args = parser.parse_args()
+
+    if args.verifying_compiler_args and not args.verifying_compiler:
+        log.error("option --verifying-compiler-args requires --verifying-compiler")
 
     log.info(f"{args}")
 
