@@ -148,7 +148,7 @@ def create_interestingness_test(args: Namespace, cwd: Path, compile_command: str
                     compile_command.find(" ") :
                 ]
                 file.write(
-                    args.verifying_compiler + f" {compile_command_without_compiler}"
+                    args.verifying_compiler + f" {compile_command_without_compiler} && "
                 )
             file.write(
                 "! " + compile_command + " -fno-color-diagnostics > log.txt 2>&1"
