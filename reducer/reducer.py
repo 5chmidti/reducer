@@ -111,7 +111,7 @@ def get_compile_commands_entry_for_file(source_file: Path, build_dir: Path, cwd:
     new_file_path = cwd.absolute() / source_file.name
     log.info(str(new_file_path))
     raw_commands = compile_commands_file.read_text()
-    raw_commands = raw_commands.replace(str(source_file), str(new_file_path))
+    raw_commands = raw_commands.replace(str(source_file), "$FILE")
     raw_commands = re.sub(r"-o [^ ]*\.o", "-o output.cpp.o", raw_commands)
     raw_commands = raw_commands.replace("-c ", f"-I{source_file.parent} -c ")
     raw_commands = raw_commands.replace(
@@ -120,7 +120,7 @@ def get_compile_commands_entry_for_file(source_file: Path, build_dir: Path, cwd:
     raw_commands = raw_commands.replace("-Werror", "")
 
     commands = json.loads(raw_commands)
-    res = [x for x in commands if x["file"] == str(new_file_path)]
+    res = [x for x in commands if x["file"] == "$FILE"]
     return res
 
 
@@ -161,7 +161,7 @@ def create_interestingness_test(args: Namespace, cwd: Path, compile_command: str
 
         if args.interesting_command:
             interesting_command = args.interesting_command.replace(
-                str(args.source_file), args.source_file.name
+                str(args.source_file), "$FILE"
             )
             interesting_command = re.sub(
                 r"-p [^ ]*", f"-p {str(cwd)}", interesting_command
@@ -188,11 +188,15 @@ def setup_test_folder(args: Namespace, cwd: Path):
 
 
 def preprocess_file(cwd: Path, file_path: Path, compile_command: str):
-    c = compile_command.replace(
-        "-o output.cpp.o", f"-E -P -o {cwd / file_path.name}.tmp"
-    ).split(" ")
+    c = (
+        compile_command.replace(
+            "-o output.cpp.o", f"-E -P -o {cwd / file_path.name}.tmp"
+        )
+        .replace("$FILE", f"{cwd / file_path.name}")
+        .split(" ")
+    )
 
-    log.info(c)
+    log.info("preprocess: " + " ".join(c))
 
     call(c)
     copy(f"{cwd / file_path.name}.tmp", f"{cwd / file_path.name}")
