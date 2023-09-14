@@ -230,11 +230,36 @@ def get_cpp_std_from_compile_commands(cwd: Path):
     return cpp_std
 
 
+def get_csvise_supported_cpp_std(args: Namespace, cpp_std: str) -> str:
+    res = run([args.reduce_bin, "--help"], capture_output=True)
+    help_msg = res.stdout.decode()
+
+    clang_delta_std_flag = "--clang-delta-std {"
+    clang_delta_std_loc = help_msg.find(clang_delta_std_flag) + len(
+        clang_delta_std_flag
+    )
+
+    help_msg = help_msg[
+        clang_delta_std_loc : help_msg.find("}", clang_delta_std_loc + 1)
+    ]
+
+    if cpp_std in help_msg:
+        return cpp_std
+
+    res = help_msg.split(",")[-1]
+    if res != "":
+        return res
+
+    return "c++20"
+
+
 def reduce_input(args: Namespace, cwd: Path):
     invocation: list[str] = [args.reduce_bin]
 
     if "cvise" in args.reduce_bin:
-        invocation.append(f"--clang-delta-std={get_cpp_std_from_compile_commands(cwd)}")
+        invocation.append(
+            f"--clang-delta-std={get_csvise_supported_cpp_std(args, get_cpp_std_from_compile_commands(cwd))}"
+        )
         invocation.append("--to-utf8")
 
     if args.jobs:
