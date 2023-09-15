@@ -277,7 +277,9 @@ def reduce_input(args: Namespace, cwd: Path):
 
     log.info(invocation)
 
-    call(invocation, cwd=cwd)
+    return_code = call(invocation, cwd=cwd)
+    if return_code != 0:
+        raise RuntimeError("reduction invokation failed")
 
 
 def reduce_existing(args: Namespace):
