@@ -112,13 +112,20 @@ def set_reduce_bin(args: Namespace):
     raise RuntimeError("Could not find reduction binaries cvise or creduce")
 
 
+def replace_path(string: str, file: Path, new_path_str: str):
+    return (
+        string.replace(str(file), new_path_str)
+        .replace(str(file.absolute()), new_path_str)
+        .replace(str(file.resolve()), new_path_str)
+    )
+
+
 def get_compile_commands_entry_for_file(source_file: Path, build_dir: Path, cwd: Path):
     compile_commands_file = build_dir / "compile_commands.json"
     new_file_path = cwd.absolute() / source_file.name
     log.info(str(new_file_path))
     raw_commands = compile_commands_file.read_text()
-    raw_commands = raw_commands.replace(str(source_file), source_file.name)
-    raw_commands = raw_commands.replace(str(source_file.absolute()), source_file.name)
+    raw_commands = replace_path(raw_commands, source_file, source_file.name)
     raw_commands = re.sub(r"-o [^ ]*\.o", "-o output.cpp.o", raw_commands)
     raw_commands = raw_commands.replace("-c ", f"-I{source_file.parent} -c ")
     raw_commands = raw_commands.replace(
@@ -167,9 +174,9 @@ def create_interestingness_test(args: Namespace, cwd: Path, compile_command: str
             )
 
         if args.interesting_command:
-            interesting_command = args.interesting_command.replace(
-                str(args.source_file), args.source_file.name
-            ).replace(str(args.source_file.absolute()), args.source_file.name)
+            interesting_command = replace_path(
+                args.interesting_command, args.source_file, args.source_file.name
+            )
             interesting_command = re.sub(
                 r"-p [^ ]*", f"-p {str(cwd)}", interesting_command
             )
@@ -195,13 +202,9 @@ def setup_test_folder(args: Namespace, cwd: Path):
 
 
 def preprocess_file(cwd: Path, file_path: Path, compile_command: str):
-    c = (
-        compile_command.replace(
-            "-o output.cpp.o", f"-E -P -o {cwd / file_path.name}.tmp"
-        )
-        .replace("$FILE", f"{cwd / file_path.name}")
-        .split(" ")
-    )
+    c = compile_command.replace(
+        "-o output.cpp.o", f"-E -P -o {cwd / file_path.name}.tmp"
+    ).split(" ")
 
     log.info("preprocess: " + " ".join(c))
 
@@ -305,8 +308,8 @@ def reduce_new(args: Namespace):
     cwd.mkdir(exist_ok=True, parents=True)
 
     if args.interesting_command:
-        args.interesting_command = args.interesting_command.replace(
-            str(args.build_dir), str(cwd)
+        args.interesting_command = replace_path(
+            args.interesting_command, args.build_dir, str(cwd)
         )
 
     setup_test_folder(args, cwd)
