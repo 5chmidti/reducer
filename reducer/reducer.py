@@ -117,7 +117,8 @@ def get_compile_commands_entry_for_file(source_file: Path, build_dir: Path, cwd:
     new_file_path = cwd.absolute() / source_file.name
     log.info(str(new_file_path))
     raw_commands = compile_commands_file.read_text()
-    raw_commands = raw_commands.replace(str(source_file), "$FILE")
+    raw_commands = raw_commands.replace(str(source_file), source_file.name)
+    raw_commands = raw_commands.replace(str(source_file.absolute()), source_file.name)
     raw_commands = re.sub(r"-o [^ ]*\.o", "-o output.cpp.o", raw_commands)
     raw_commands = raw_commands.replace("-c ", f"-I{source_file.parent} -c ")
     raw_commands = raw_commands.replace(
@@ -126,7 +127,7 @@ def get_compile_commands_entry_for_file(source_file: Path, build_dir: Path, cwd:
     raw_commands = raw_commands.replace("-Werror", "")
 
     commands = json.loads(raw_commands)
-    res = [x for x in commands if x["file"] == "$FILE"]
+    res = [x for x in commands if x["file"] == source_file.name]
     return res
 
 
@@ -145,8 +146,6 @@ def create_interestingness_test(args: Namespace, cwd: Path, compile_command: str
 
     with open(f"{cwd}/test.sh", "w") as file:
         file.write("#!/bin/bash\n")
-
-        file.write(f'FILE="{cwd / args.source_file.name}"\n')
 
         if args.compile_error:
             if args.verifying_compiler:
@@ -169,8 +168,8 @@ def create_interestingness_test(args: Namespace, cwd: Path, compile_command: str
 
         if args.interesting_command:
             interesting_command = args.interesting_command.replace(
-                str(args.source_file), "$FILE"
-            )
+                str(args.source_file), args.source_file.name
+            ).replace(str(args.source_file.absolute()), args.source_file.name)
             interesting_command = re.sub(
                 r"-p [^ ]*", f"-p {str(cwd)}", interesting_command
             )
