@@ -53,6 +53,20 @@ class TestReducer(TestCase):
             ]
         )
 
+    def test_clang_ice(self):
+        self.do_reduction(
+            [
+                f"{self.project_dir}/src/ice64454.cpp",
+                "--build-dir",
+                f"{self.build_dir}",
+                "--compile-error",
+                "--verifying-compiler",
+                "g++",
+                "--interesting-command",
+                "grep -F 'clang::LocalInstantiationScope::InstantiatedLocal(clang::Decl const*, clang::Decl*)' -- log.txt",
+            ]
+        )
+
 
 if __name__ == "__main__":
     main()
