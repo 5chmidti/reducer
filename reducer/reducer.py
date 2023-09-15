@@ -318,8 +318,13 @@ def main():
     parser = init_argparse()
     args = parser.parse_args()
 
+    if args.compile_error and not args.verifying_compiler:
+        log.error("option --compile-error requires --verifying-compiler")
+        return
+
     if args.verifying_compiler_args and not args.verifying_compiler:
         log.error("option --verifying-compiler-args requires --verifying-compiler")
+        return
 
     log.info(f"{args}")
 
