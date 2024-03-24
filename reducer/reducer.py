@@ -160,9 +160,12 @@ def create_interestingness_test(args: Namespace, cwd: Path, compile_command: str
                 if args.verifying_compiler_args:
                     verifying_compiler_args = args.verifying_compiler_args
                 else:
-                    verifying_compiler_args = compile_command[
-                        compile_command.find(" ") :
-                    ]
+                    verifying_compiler_args = (
+                        compile_command[compile_command.find(" ") :]
+                        .replace("-fcolor-diagnostics", "")
+                        .replace("-Wdocumentation", "")
+                        .replace("-fopenmp=libomp", "-fopenmp")
+                    )
                 file.write(args.verifying_compiler + f" {verifying_compiler_args} && ")
             file.write(
                 "! " + compile_command + " -fno-color-diagnostics > log.txt 2>&1"
