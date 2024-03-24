@@ -23,34 +23,34 @@ log = logging.getLogger("rich")
 
 def init_argparse() -> ArgumentParser:
     parser = ArgumentParser(
-        description="extract and run reductions for cvise/creduce from a project with compile_commands.json",
+        description="Extract and run reductions for cvise/creduce from a project with compile_commands.json.",
     )
     parser.add_argument(
         "source_file",
-        help="source file to reduce",
+        help="Source file to reduce.",
         type=Path,
     )
     parser.add_argument(
         "--reduce-bin",
-        help="binary to use for reduction",
+        help="Tool to use for reduction (e.g., cvise, creduce).",
         required=False,
         type=str,
     )
     parser.add_argument(
         "--build-dir",
-        help="build directory of project",
+        help="Build directory of project.",
         required=False,
         type=Path,
     )
     parser.add_argument(
         "--interesting-command",
-        help="command satisfying interestingness test properties",
+        help="Command satisfying interestingness test properties.",
         required=False,
         type=str,
     )
     parser.add_argument(
         "--compile-error",
-        help="build is the interesting command",
+        help="Reduce an internal compiler error.",
         default=False,
         required=False,
         type=bool,
@@ -58,19 +58,19 @@ def init_argparse() -> ArgumentParser:
     )
     parser.add_argument(
         "--verifying-compiler",
-        help="compiler that checks if the reduced code is still correct",
+        help="The compiler that checks if the reduced code is still valid.",
         required=False,
         type=str,
     )
     parser.add_argument(
         "--verifying-compiler-args",
-        help="arguments to call the verifying compiler with instead of the arguments from the crashing compiler. use $FILE to reference the source file",
+        help="Arguments to call the verifying compiler with instead of the arguments from the crashing compiler. Use $FILE to reference the source file.",
         required=False,
         type=str,
     )
     parser.add_argument(
         "--preprocess",
-        help="run preprocessor on source file",
+        help="Run preprocessor on source file.",
         action=BooleanOptionalAction,
         default=False,
         required=False,
@@ -78,19 +78,19 @@ def init_argparse() -> ArgumentParser:
     )
     parser.add_argument(
         "--rerun-existing",
-        help="run a reduction on an existing reducer folder",
+        help="Run a reduction on an existing reducer folder.",
         required=False,
         type=Path,
     )
     parser.add_argument(
         "--jobs",
-        help="number of jobs to run with the reducer",
+        help="Number of jobs to run with the reducer.",
         required=False,
         type=int,
     )
     parser.add_argument(
         "--timeout",
-        help="timeout for the interestingness command, when timing out is considered the issue (time-out -> interesting)",
+        help="Timeout for the interestingness command, when timing out is considered the issue (time-out -> interesting).",
         required=False,
         type=int,
     )
