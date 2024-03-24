@@ -221,7 +221,7 @@ def preprocess_file(cwd: Path, file_path: Path, compile_command: str):
 
     log.info("preprocess: " + " ".join(c))
 
-    call(c)
+    call(c, cwd=cwd)
     copy(f"{cwd / file_path.name}.tmp", f"{cwd / file_path.name}")
 
 
