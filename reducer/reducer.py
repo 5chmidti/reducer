@@ -90,7 +90,7 @@ def init_argparse() -> ArgumentParser:
     )
     parser.add_argument(
         "--timeout",
-        help="timeout for the interestingness command",
+        help="timeout for the interestingness command, when timing out is considered the issue (time-out -> interesting)",
         required=False,
         type=int,
     )
@@ -167,9 +167,16 @@ def create_interestingness_test(args: Namespace, cwd: Path, compile_command: str
                         .replace("-fopenmp=libomp", "-fopenmp")
                     )
                 file.write(args.verifying_compiler + f" {verifying_compiler_args} && ")
-            file.write(
-                "! " + compile_command + " -fno-color-diagnostics > log.txt 2>&1"
-            )
+            if args.timeout:
+                file.write(
+                    "! " + compile_command + " -fno-color-diagnostics > log.txt 2>&1"
+                )
+            else:
+                file.write(
+                    f"! timeout {args.timeout} "
+                    + compile_command
+                    + " -fno-color-diagnostics > log.txt 2>&1"
+                )
         else:
             file.write(
                 compile_command
@@ -185,7 +192,10 @@ def create_interestingness_test(args: Namespace, cwd: Path, compile_command: str
             )
             log.info(f"interesting_command: {interesting_command}")
 
-            file.write(f" && {interesting_command}\n")
+            if args.timeout:
+                file.write(f" && ! timeout {args.timeout} {interesting_command}\n")
+            else:
+                file.write(f" && {interesting_command}\n")
 
         chmod(file.name, stat(file.name).st_mode | S_IEXEC)
 
