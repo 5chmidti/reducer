@@ -134,7 +134,7 @@ def get_compile_commands_entry_for_file(source_file: Path, build_dir: Path, cwd:
     raw_commands = raw_commands.replace("-Werror", "")
 
     commands = json.loads(raw_commands)
-    res = [x for x in commands if x["file"] == source_file.name]
+    res = [x for x in commands if source_file.name in x["file"]]
     return res
 
 
