@@ -64,7 +64,7 @@ def init_argparse() -> ArgumentParser:
     )
     parser.add_argument(
         "--verifying-compiler-args",
-        help="Arguments to call the verifying compiler with instead of the arguments from the crashing compiler. Use $FILE to reference the source file.",
+        help="Arguments to call the verifying compiler with instead of the arguments from the crashing compiler.",
         required=False,
         type=str,
     )
