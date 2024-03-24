@@ -23,7 +23,7 @@ log = logging.getLogger("rich")
 
 def init_argparse() -> ArgumentParser:
     parser = ArgumentParser(
-        description="run csmith on get-me executable",
+        description="extract and run reductions for cvise/creduce from a project with compile_commands.json",
     )
     parser.add_argument(
         "source_file",
