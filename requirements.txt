@@ -1,10 +1,5 @@
-black==23.9.1
-click==8.1.7
-markdown-it-py==3.0.0
-mdurl==0.1.2
-mypy-extensions==1.0.0
-packaging==23.1
-pathspec==0.11.2
-platformdirs==3.10.0
-Pygments==2.16.1
-rich==13.5.2
+black==24.3.0
+chardet==5.2.0
+Pebble==5.0.7
+psutil==5.9.8
+rich==13.7.1
