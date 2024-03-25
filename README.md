@@ -20,7 +20,7 @@ To re-run reductions on an existing folder use `--rerun-existing`, which can be 
 The `--interesting-command` argument follows the conventions of `creduce` and `cvise` and you can use log.txt to access the compile log.
 For the interestingness test to work correctly, the path of the source file (if mentioned) has to be fully written out like it was passed as the positional argument, because the tool replaces the paths to the source file to the location in the directory created for the reduction.
 
-Checkout [test/test_reducer.py](test_reducer.py) for examples that include a reduction with clang-tidy, an internal compiler error and grep.
+Checkout [test_reducer.py](./test/test_reducer.py) for examples that include a reduction with clang-tidy, an internal compiler error and grep.
 
 ```console
 $ python reducer/reducer.py
