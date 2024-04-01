@@ -188,7 +188,7 @@ def create_interestingness_test(args: Namespace, cwd: Path, compile_command: str
                 args.interesting_command, args.source_file, args.source_file.name
             )
             interesting_command = re.sub(
-                r"-p [^ ]*", f"-p {str(cwd)}", interesting_command
+                r"-p[ =]?[^ ]*", f"-p {str(cwd)}", interesting_command
             )
             log.info(f"interesting_command: {interesting_command}")
 
