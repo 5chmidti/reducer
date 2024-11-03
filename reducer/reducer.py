@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from argparse import ArgumentParser, Namespace, BooleanOptionalAction
 import json
 from os import chmod, stat
