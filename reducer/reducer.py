@@ -5,7 +5,6 @@ import logging
 import re
 from argparse import ArgumentParser, BooleanOptionalAction, Namespace
 from multiprocessing import cpu_count
-from os import chmod, stat
 from pathlib import Path
 from shutil import copy, which
 from stat import S_IEXEC
@@ -117,7 +116,7 @@ def set_reduce_bin(args: Namespace) -> None:
         args.reduce_bin = "creduce"
         return
 
-    raise RuntimeError("Could not find reduction binaries cvise or creduce")
+    raise RuntimeError("Could not find reduction binaries 'cvise' or 'creduce'")
 
 
 def replace_path(string: str, file: Path, new_path_str: str) -> str:
@@ -128,26 +127,25 @@ def replace_path(string: str, file: Path, new_path_str: str) -> str:
     )
 
 
-def get_compile_commands_entry_for_file(
+def transform_compile_commands(comp_db_entry: str, source_file: Path) -> str:
+    comp_db_entry = replace_path(comp_db_entry, source_file, source_file.name)
+    comp_db_entry = re.sub(r"-o [^ ]*\.o", "-o output.cpp.o", comp_db_entry)
+    comp_db_entry = comp_db_entry.replace("-c ", f"-I{source_file.parent} -c ")
+    comp_db_entry = comp_db_entry.replace("-c ", "-Wfatal-errors -c ")
+    return comp_db_entry.replace("-Werror", "")
+
+
+def get_compile_commands_entry_for_file(  # noqa: ANN201
     source_file: Path,
     build_dir: Path,
-    cwd: Path,
-) -> list[Any]:
+):
     compile_commands_file = build_dir / "compile_commands.json"
-    new_file_path = cwd.absolute() / source_file.name
-    log.info(str(new_file_path))
-    raw_commands = compile_commands_file.read_text()
-    raw_commands = replace_path(raw_commands, source_file, source_file.name)
-    raw_commands = re.sub(r"-o [^ ]*\.o", "-o output.cpp.o", raw_commands)
-    raw_commands = raw_commands.replace("-c ", f"-I{source_file.parent} -c ")
-    raw_commands = raw_commands.replace(
-        "-c ",
-        "-Wfatal-errors -Wno-invalid-constexpr -c ",
+    raw_commands = transform_compile_commands(
+        compile_commands_file.read_text(),
+        source_file,
     )
-    raw_commands = raw_commands.replace("-Werror", "")
 
-    commands = json.loads(raw_commands)
-    return [x for x in commands if source_file.name in x["file"]]
+    return [x for x in json.loads(raw_commands) if source_file.name in x["file"]]
 
 
 def remove_explicit_path(compile_command: str, cwd: Path) -> str:
@@ -155,8 +153,7 @@ def remove_explicit_path(compile_command: str, cwd: Path) -> str:
 
 
 def write_compile_commands(compile_commands: Any, cwd: Path) -> None:
-    new_compile_commands_path = cwd.absolute() / "compile_commands.json"
-    new_compile_commands_path.write_text(json.dumps(compile_commands))
+    (cwd.absolute() / "compile_commands.json").write_text(json.dumps(compile_commands))
 
 
 def create_interestingness_test(
@@ -186,9 +183,7 @@ def create_interestingness_test(
             )
         if args.timeout:
             file.write_text(
-                "! "
-                + compile_command
-                + " -fno-color-diagnostics > log.txt 2>&1",
+                "! " + compile_command + " -fno-color-diagnostics > log.txt 2>&1",
             )
         else:
             file.write_text(
@@ -198,8 +193,7 @@ def create_interestingness_test(
             )
     else:
         file.write_text(
-            compile_command
-            + " -Wfatal-errors -fno-color-diagnostics > log.txt 2>&1",
+            compile_command + " -Wfatal-errors -fno-color-diagnostics > log.txt 2>&1",
         )
 
     if args.interesting_command:
@@ -229,7 +223,6 @@ def setup_test_folder(args: Namespace, cwd: Path) -> None:
     compile_commands = get_compile_commands_entry_for_file(
         args.source_file,
         args.build_dir,
-        cwd,
     )
     write_compile_commands(compile_commands, cwd)
     file_path: Path = args.source_file
@@ -247,7 +240,7 @@ def preprocess_file(cwd: Path, file_path: Path, compile_command: str) -> None:
         f"-E -P -o {cwd / file_path.name}.tmp",
     ).split(" ")
 
-    log.info("preprocess: " + " ".join(c))
+    log.info(f"preprocess: {' '.join(c)}")
 
     call(c, cwd=cwd)
     copy(f"{cwd / file_path.name}.tmp", f"{cwd / file_path.name}")
@@ -267,9 +260,7 @@ def get_cpp_std_from_compile_commands(cwd: Path) -> str:
     if cpp_std_pos != -1:
         is_gnu = compile_command[cpp_std_pos + 5] == "g"
         if is_gnu:
-            cpp_std = (
-                f"c++{compile_command[cpp_std_pos + 10 : cpp_std_pos + 12]}"
-            )
+            cpp_std = f"c++{compile_command[cpp_std_pos + 10 : cpp_std_pos + 12]}"
         else:
             cpp_std = f"{compile_command[cpp_std_pos + 6 : cpp_std_pos + 11]}"
     return cpp_std
