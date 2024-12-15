@@ -75,14 +75,6 @@ def init_argparse() -> ArgumentParser:
         type=str,
     )
     parser.add_argument(
-        "--preprocess",
-        help="Run preprocessor on source file.",
-        action=BooleanOptionalAction,
-        default=False,
-        required=False,
-        type=bool,
-    )
-    parser.add_argument(
         "--rerun-existing",
         help="Run a reduction on an existing reducer folder.",
         required=False,
@@ -132,7 +124,7 @@ def transform_compile_commands(comp_db_entry: str, source_file: Path) -> str:
     comp_db_entry = re.sub(r"-o [^ ]*\.o", "-o output.cpp.o", comp_db_entry)
     comp_db_entry = comp_db_entry.replace("-c ", f"-I{source_file.parent} -c ")
     comp_db_entry = comp_db_entry.replace("-c ", "-Wfatal-errors -c ")
-    return comp_db_entry.replace("-Werror", "")
+    return re.sub(r"-Werror(=[\w-]*)?", "", comp_db_entry)
 
 
 def get_compile_commands_entry_for_file(  # noqa: ANN201
@@ -204,10 +196,11 @@ def create_interestingness_test(
         )
         log.info(f"interesting_command: {interesting_command}")
 
+        file_content = file_content + " &&"
         if args.timeout:
-            file_content = file_content + " && ! timeout\n"
+            file_content = file_content + f" ! timeout {args.timeout}"
         file_content = str(
-            file_content + f"{args.timeout} {interesting_command}\n",
+            file_content + f" {interesting_command}\n",
         )
 
     file.write_text(file_content)
@@ -223,22 +216,26 @@ def setup_test_folder(args: Namespace, cwd: Path) -> None:
     file_path: Path = args.source_file
     copy(file_path, cwd / file_path.name)
     compile_command = compile_commands[0]["command"]
-    if args.preprocess:
-        preprocess_file(cwd, file_path, compile_command)
 
     create_interestingness_test(args, cwd, compile_command)
+    preprocess_file(cwd, file_path, compile_command)
 
 
 def preprocess_file(cwd: Path, file_path: Path, compile_command: str) -> None:
+    copy(f"{cwd / file_path.name}", f"{cwd / file_path.name}.bckp")
+
     c = compile_command.replace(
         "-o output.cpp.o",
-        f"-E -P -o {cwd / file_path.name}.tmp",
+        f"-E -P -o {cwd / file_path.name}",
     ).split(" ")
 
     log.info(f"preprocess: {' '.join(c)}")
 
     call(c, cwd=cwd)
-    copy(f"{cwd / file_path.name}.tmp", f"{cwd / file_path.name}")
+    if call(["sh", "test.sh"], cwd=cwd) != 0:
+        log.info("preprocessing the file did not retain the same error")
+
+        copy(f"{cwd / file_path.name}.bckp", f"{cwd / file_path.name}")
 
 
 def load_compile_commands(build_dir: Path) -> Any:
@@ -320,11 +317,10 @@ def reduce_existing(args: Namespace) -> None:
         log.error(f"path of rerun_existing does not exist: {existing_path}")
         return
 
-    if args.preprocess:
-        compile_commands = load_compile_commands(existing_path)
-        compile_command: str = compile_commands[0]["command"]
-        file_path: Path = args.source_file
-        preprocess_file(existing_path, file_path, compile_command)
+    compile_commands = load_compile_commands(existing_path)
+    compile_command: str = compile_commands[0]["command"]
+    file_path: Path = compile_commands[0]["file"]
+    preprocess_file(existing_path, file_path, compile_command)
 
     reduce_input(args, existing_path)
 
