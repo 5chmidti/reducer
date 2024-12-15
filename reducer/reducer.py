@@ -164,37 +164,32 @@ def create_interestingness_test(
     compile_command = remove_explicit_path(compile_command, cwd)
 
     file = Path(f"{cwd}/test.sh")
-    file.write_text("#!/bin/bash\n")
+    file_content: str = "#!/bin/bash\n"
 
-    if args.compile_error:
-        if args.verifying_compiler:
-            verifying_compiler_args: str
-            if args.verifying_compiler_args:
-                verifying_compiler_args = args.verifying_compiler_args
-            else:
-                verifying_compiler_args = (
-                    compile_command[compile_command.find(" ") :]
-                    .replace("-fcolor-diagnostics", "")
-                    .replace("-Wdocumentation", "")
-                    .replace("-fopenmp=libomp", "-fopenmp")
-                )
-            file.write_text(
-                args.verifying_compiler + f" {verifying_compiler_args} && ",
-            )
-        if args.timeout:
-            file.write_text(
-                "! " + compile_command + " -fno-color-diagnostics > log.txt 2>&1",
-            )
+    if args.compile_error and args.verifying_compiler:
+        verifying_compiler_args: str
+        if args.verifying_compiler_args:
+            verifying_compiler_args = args.verifying_compiler_args
         else:
-            file.write_text(
-                f"! timeout {args.timeout} "
-                + compile_command
-                + " -fno-color-diagnostics > log.txt 2>&1",
+            verifying_compiler_args = (
+                compile_command[compile_command.find(" ") :]
+                .replace("-fcolor-diagnostics", "")
+                .replace("-Wdocumentation", "")
+                .replace("-fopenmp=libomp", "-fopenmp")
             )
-    else:
-        file.write_text(
-            compile_command + " -Wfatal-errors -fno-color-diagnostics > log.txt 2>&1",
+        file_content = str(
+            file_content
+            + str(args.verifying_compiler)
+            + f" {verifying_compiler_args} && ",
         )
+
+    if args.compile_error and args.timeout:
+        file_content = file_content + f"! timeout {args.timeout} "
+    file_content = str(
+        file_content
+        + compile_command
+        + " -Wfatal-errors -fno-color-diagnostics > log.txt 2>&1",
+    )
 
     if args.interesting_command:
         interesting_command = replace_path(
@@ -210,12 +205,12 @@ def create_interestingness_test(
         log.info(f"interesting_command: {interesting_command}")
 
         if args.timeout:
-            file.write_text(
-                f" && ! timeout {args.timeout} {interesting_command}\n",
-            )
-        else:
-            file.write_text(f" && {interesting_command}\n")
+            file_content = file_content + " && ! timeout\n"
+        file_content = str(
+            file_content + f"{args.timeout} {interesting_command}\n",
+        )
 
+    file.write_text(file_content)
     file.chmod(file.stat().st_mode | S_IEXEC)
 
 
