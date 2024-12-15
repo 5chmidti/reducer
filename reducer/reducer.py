@@ -3,6 +3,7 @@
 import json
 import logging
 import re
+import sys
 from argparse import ArgumentParser, BooleanOptionalAction, Namespace
 from multiprocessing import cpu_count
 from pathlib import Path
@@ -31,9 +32,10 @@ def init_argparse() -> ArgumentParser:
         " project with compile_commands.json.",
     )
     parser.add_argument(
-        "source_file",
+        "--file",
         help="Source file to reduce.",
         type=Path,
+        required=False,
     )
     parser.add_argument(
         "--reduce-bin",
@@ -184,10 +186,15 @@ def create_interestingness_test(
     )
 
     if args.interesting_command:
+        args.interesting_command = replace_path(
+            args.interesting_command,
+            args.build_dir,
+            str(cwd),
+        )
         interesting_command = replace_path(
             args.interesting_command,
-            args.source_file,
-            args.source_file.name,
+            args.file,
+            args.file.name,
         )
         interesting_command = re.sub(
             r"-p[ =]?[^ ]*",
@@ -209,11 +216,11 @@ def create_interestingness_test(
 
 def setup_test_folder(args: Namespace, cwd: Path) -> None:
     compile_commands = get_compile_commands_entry_for_file(
-        args.source_file,
+        args.file,
         args.build_dir,
     )
     write_compile_commands(compile_commands, cwd)
-    file_path: Path = args.source_file
+    file_path: Path = args.file
     copy(file_path, cwd / file_path.name)
     compile_command = compile_commands[0]["command"]
 
@@ -299,50 +306,13 @@ def reduce_input(args: Namespace, cwd: Path) -> None:
         invocation.append(f"--timeout={args.timeout}")
 
     invocation.append("test.sh")
-    invocation.append(args.source_file.name)
+    invocation.append(args.file.name)
 
     log.info(invocation)
 
     return_code = call(invocation, cwd=cwd)
     if return_code != 0:
         raise RuntimeError("reduction invokation failed")
-
-
-def reduce_existing(args: Namespace) -> None:
-    set_reduce_bin(args)
-
-    existing_path = args.rerun_existing
-
-    if not existing_path.exists():
-        log.error(f"path of rerun_existing does not exist: {existing_path}")
-        return
-
-    compile_commands = load_compile_commands(existing_path)
-    compile_command: str = compile_commands[0]["command"]
-    file_path: Path = compile_commands[0]["file"]
-    preprocess_file(existing_path, file_path, compile_command)
-
-    reduce_input(args, existing_path)
-
-
-def reduce_new(args: Namespace) -> None:
-    set_reduce_bin(args)
-
-    args.source_file = args.source_file.resolve()
-    args.build_dir = args.build_dir.resolve()
-
-    cwd = args.build_dir / ("reducer/" + str(uuid4().hex))
-    cwd.mkdir(exist_ok=True, parents=True)
-
-    if args.interesting_command:
-        args.interesting_command = replace_path(
-            args.interesting_command,
-            args.build_dir,
-            str(cwd),
-        )
-
-    setup_test_folder(args, cwd)
-    reduce_input(args, cwd)
 
 
 def main() -> None:
@@ -361,10 +331,38 @@ def main() -> None:
 
     log.info(f"{args}")
 
+    set_reduce_bin(args)
+
     if args.rerun_existing:
-        reduce_existing(args)
+        existing_path = args.rerun_existing
+
+        if not existing_path.exists():
+            log.error(f"path of rerun_existing does not exist: {existing_path}")
+            return
+
+        compile_commands = load_compile_commands(existing_path)
+        compile_command: str = compile_commands[0]["command"]
+        file_path: Path = compile_commands[0]["file"]
+        preprocess_file(existing_path, file_path, compile_command)
+        cwd = args.rerun_existing
     else:
-        reduce_new(args)
+        if not args.file:
+            log.error("Needs a '--file=<file>' to reduce")
+            sys.exit(1)
+        if not args.build_dir:
+            log.error(
+                "Needs a '--build-dir=<build-dir>' to extract compilation command from",
+            )
+            sys.exit(1)
+        args.file = args.file.resolve()
+        args.build_dir = args.build_dir.resolve()
+
+        cwd = args.build_dir / ("reducer/" + str(uuid4().hex))
+        cwd.mkdir(exist_ok=True, parents=True)
+
+        setup_test_folder(args, cwd)
+
+    reduce_input(args, cwd)
 
 
 if __name__ == "__main__":
