@@ -149,21 +149,28 @@ def reduce(args: Namespace, cwd: Path) -> None:
     invocation.append("test.sh")
     invocation.append(args.file.name)
 
-    log.info(invocation)
+    log.info(f"reduction ivocation: '{' '.join(invocation)}'")
 
     compile_commands = get_compile_commands_entry_for_file(
         args.file,
         cwd,
     )
     compile_command = compile_commands[0]["command"]
-    iteration = 0
+    iteration = -1
     while True:
         preprocess_file(cwd, cwd / args.file.name, compile_command)
         return_code = call(invocation, cwd=cwd)
         if return_code != 0:
-            raise RuntimeError("reduction invokation failed")
+            raise RuntimeError("reduction invocation failed")
         if not args.prompt_rerun or not prompt_yes_no("Continue reduction?"):
             break
 
-        copyfile(cwd / args.file.name, cwd / (args.file.name + str(iteration)))
         iteration = iteration + 1
+        copyfile(cwd / args.file.name, cwd / (args.file.name + str(iteration)))
+
+    if iteration != -1:
+        log.info(
+            f"The final reduction result is in {cwd/args.file.name +str(iteration)}",
+        )
+    else:
+        log.info(f"The reduction result is in {cwd/args.file.name}")
