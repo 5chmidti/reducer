@@ -7,6 +7,3 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(main)
 target_sources(main PRIVATE src/main.cpp)
-
-add_library(ice64454)
-target_sources(ice64454 PRIVATE src/ice64454.cpp)
