@@ -125,7 +125,7 @@ def main() -> None:
     CompilerCrashDriver().add_arguments(common_parser, sub_parser)
     args = parser.parse_args()
 
-    log.info(f"{args}")
+    log.info(args)
 
     set_reduce_bin(args)
 
@@ -154,8 +154,6 @@ def main() -> None:
 
         cwd = args.build_dir / ("reducer/" + str(uuid4().hex))
         cwd.mkdir(exist_ok=True, parents=True)
-
-    log.info(args)
 
     driver: Driver | None = None
     match args.sub:
