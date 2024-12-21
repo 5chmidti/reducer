@@ -9,7 +9,6 @@ from reducer.lib.driver import Driver
 from reducer.lib.log import log
 from reducer.lib.setup import (
     get_compile_command,
-    remove_explicit_path,
     replace_path_in_list,
 )
 
@@ -201,7 +200,7 @@ class ClangTidyDriver(Driver):
         cwd: Path,
         compile_command_json: dict[str, str],
     ) -> None:
-        compile_command = remove_explicit_path(compile_command_json["command"], cwd)
+        compile_command = get_compile_command(compile_command_json["command"], cwd)
 
         file = Path(f"{cwd}/test.sh")
         file_content: str = "#!/bin/bash\n"
@@ -210,7 +209,7 @@ class ClangTidyDriver(Driver):
             file_content = file_content + f"! timeout {args.timeout} "
         file_content = str(
             file_content
-            + get_compile_command(compile_command, cwd)
+            + compile_command
             + " -Wfatal-errors -fno-color-diagnostics > log.txt 2>&1",
         )
 

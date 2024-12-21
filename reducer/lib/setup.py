@@ -136,7 +136,7 @@ def write_compile_commands(compile_commands: Any, cwd: Path) -> None:
     (cwd.absolute() / "compile_commands.json").write_text(json.dumps(compile_commands))
 
 
-def get_compile_command(compile_command: Any, cwd: Path) -> str:
+def get_compile_command(compile_command: str, cwd: Path) -> str:
     return str(
         remove_explicit_path(compile_command, cwd)
         .replace("-fcolor-diagnostics", "")

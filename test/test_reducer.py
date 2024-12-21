@@ -1,9 +1,10 @@
+from os import environ
 from pathlib import Path
 from shutil import rmtree
 from subprocess import call
 from unittest import TestCase, main
+
 from reducer import reducer
-from os import environ
 
 
 class TestReducer(TestCase):
@@ -39,7 +40,7 @@ class TestReducer(TestCase):
                 f"{self.build_dir}",
                 "--interesting-command",
                 f"clang-tidy -p {self.build_dir} --checks=\"-*,readability-const-return-type\" main.cpp 2>&1 | grep 'readability-const-return-type'",
-            ]
+            ],
         )
 
     def test_clang_div_by_zero(self):
@@ -50,7 +51,7 @@ class TestReducer(TestCase):
                 f"{self.build_dir}",
                 "--interesting-command",
                 "grep -- '-Wdivision-by-zero' log.txt",
-            ]
+            ],
         )
 
     def test_clang_ice(self):
@@ -64,7 +65,7 @@ class TestReducer(TestCase):
                 "g++",
                 "--interesting-command",
                 "grep -F 'clang::LocalInstantiationScope::InstantiatedLocal(clang::Decl const*, clang::Decl*)' -- log.txt",
-            ]
+            ],
         )
 
 
