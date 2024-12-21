@@ -22,7 +22,7 @@ class TestReducer(TestCase):
         call(build_project.split(" "), env=env)
 
     def do_reduction(self, invocation: list[str]):
-        parser = reducer.init_argparse()
+        parser = reducer.init_common_argparse()
         args = parser.parse_args(invocation)
         reducer.log.info(f"{args}")
 
