@@ -5,6 +5,7 @@ from os import cpu_count
 from pathlib import Path
 from shutil import copy, copyfile
 from subprocess import call, run
+import sys
 from typing import Any
 
 from reducer.lib.log import log
@@ -161,7 +162,8 @@ def reduce(args: Namespace, cwd: Path) -> None:
         preprocess_file(cwd, cwd / args.file.name, compile_command)
         return_code = call(invocation, cwd=cwd)
         if return_code != 0:
-            raise RuntimeError("reduction invocation failed")
+            log.error("reduction invocation failed")
+            sys.exit(1)
         if not args.prompt_rerun or not prompt_yes_no("Continue reduction?"):
             break
 

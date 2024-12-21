@@ -110,7 +110,8 @@ def set_reduce_bin(args: Namespace) -> None:
         args.reduce_bin = "creduce"
         return
 
-    raise RuntimeError("Could not find reduction binaries 'cvise' or 'creduce'")
+    log.error("Could not find reduction binaries 'cvise' or 'creduce'")
+    sys.exit(1)
 
 
 def main() -> None:
