@@ -1,0 +1,14 @@
+target-version= "py39"
+
+[lint]
+select = [ "ALL" ]
+ignore = [ 
+    "ANN401", # allow using 'Any'
+    "D213", # choose multi-line summary to be on the first line
+    "D100", # skip documenting each module
+    "D102", # skip 
+    "D103", # skip functions
+    "D104", # skip package documentation as this is not distributed
+    "D203", # dont have a newline between class and class docstring 
+]
+
