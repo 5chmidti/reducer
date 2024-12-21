@@ -3,12 +3,13 @@ import re
 from argparse import Namespace
 from os import cpu_count
 from pathlib import Path
-from shutil import copy
+from shutil import copy, copyfile
 from stat import S_IEXEC
 from subprocess import call, run
 from typing import Any
 
 from lib.log import log
+from lib.prompt import prompt_yes_no
 
 
 def setup_test_folder(args: Namespace, cwd: Path) -> None:
@@ -218,10 +219,7 @@ def reduce(args: Namespace, cwd: Path) -> None:
         )
         invocation.append("--to-utf8")
 
-    if args.jobs:
-        invocation.append(f"--n={args.jobs}")
-    else:
-        invocation.append(f"--n={cpu_count()}")
+    invocation.append(f"--n={args.jobs if args.jobs else cpu_count()}")
 
     if args.timeout:
         invocation.append(f"--timeout={args.timeout}")
@@ -231,6 +229,19 @@ def reduce(args: Namespace, cwd: Path) -> None:
 
     log.info(invocation)
 
-    return_code = call(invocation, cwd=cwd)
-    if return_code != 0:
-        raise RuntimeError("reduction invokation failed")
+    compile_commands = get_compile_commands_entry_for_file(
+        args.file,
+        cwd,
+    )
+    compile_command = compile_commands[0]["command"]
+    iteration = 0
+    while True:
+        preprocess_file(cwd, cwd / args.file.name, compile_command)
+        return_code = call(invocation, cwd=cwd)
+        if return_code != 0:
+            raise RuntimeError("reduction invokation failed")
+        if not args.prompt_rerun or not prompt_yes_no("Continue reduction?"):
+            break
+
+        copyfile(cwd / args.file.name, cwd / (args.file.name + str(iteration)))
+        iteration = iteration + 1

@@ -85,6 +85,15 @@ def init_argparse() -> ArgumentParser:
         required=False,
         type=int,
     )
+    parser.add_argument(
+        "--prompt-rerun",
+        help="Prompt to re-run the reduction in the created folder. Useful"
+        "for manual reductions when the reduction tool can't progress further.",
+        default=True,
+        required=False,
+        type=bool,
+        action=BooleanOptionalAction,
+    )
     return parser
 
 
