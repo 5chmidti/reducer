@@ -5,9 +5,13 @@ from stat import S_IEXEC
 from subprocess import call, run
 from typing import Optional
 
-from lib.driver import Driver
-from lib.log import log
-from lib.setup import get_compile_command, remove_explicit_path, replace_path_in_list
+from reducer.lib.driver import Driver
+from reducer.lib.log import log
+from reducer.lib.setup import (
+    get_compile_command,
+    remove_explicit_path,
+    replace_path_in_list,
+)
 
 
 def write_existing_clang_tidy_config(

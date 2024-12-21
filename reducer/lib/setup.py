@@ -8,8 +8,8 @@ from stat import S_IEXEC
 from subprocess import call, run
 from typing import Any
 
-from lib.log import log
-from lib.prompt import prompt_yes_no
+from reducer.lib.log import log
+from reducer.lib.prompt import prompt_yes_no
 
 
 def setup_test_folder(args: Namespace, cwd: Path) -> None:

@@ -21,12 +21,13 @@
           python-pkgs.rich
           python-pkgs.setuptools
         ];
+        pyproject = true;
         src = ./.;
       };
 
       apps.${system}.default = {
         type = "app";
-        program = "${self.packages.${system}.default}/bin/.reducer.py-wrapped";
+        program = "${self.packages.${system}.default}/bin/reducer";
       };
     };
 }

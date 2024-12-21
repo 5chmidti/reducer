@@ -1,4 +1,4 @@
-from lib.log import log
+from reducer.lib.log import log
 
 
 def prompt_yes_no(question: str, assume_yes: bool = True) -> bool:

@@ -6,9 +6,9 @@ from pathlib import Path
 from shutil import which
 from uuid import uuid4
 
-from driver.clang_tidy import ClangTidyDriver
-from lib.log import log
-from lib.setup import (
+from reducer.driver.clang_tidy import ClangTidyDriver
+from reducer.lib.log import log
+from reducer.lib.setup import (
     load_compile_commands,
     preprocess_file,
     reduce,

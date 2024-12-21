@@ -2,7 +2,7 @@ from argparse import Namespace
 from pathlib import Path
 from shutil import copy
 
-from lib.setup import (
+from reducer.lib.setup import (
     create_interestingness_test,
     get_compile_commands_entry_for_file,
     preprocess_file,

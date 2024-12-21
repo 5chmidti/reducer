@@ -1,6 +1,19 @@
+[project]
+name = "reducer"
+version = "0.1"
+description = "Clang Tooling Reductions"
+
+dependencies = [
+    "rich"
+]
+
+[project.scripts]
+reducer = "reducer.reducer:main"
+
+[tool.ruff]
 target-version= "py39"
 
-[lint]
+[tool.ruff.lint]
 select = [ "ALL" ]
 ignore = [ 
     "ANN401", # allow using 'Any'
