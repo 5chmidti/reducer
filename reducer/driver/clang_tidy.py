@@ -1,7 +1,8 @@
 from argparse import ArgumentParser, BooleanOptionalAction, Namespace
+from json import loads
 from pathlib import Path
 from re import findall, match, sub
-from stat import S_IEXEC
+from stat import S_IEXEC, S_IROTH, S_IXGRP, S_IXOTH
 from subprocess import call, run
 from typing import Optional
 
@@ -64,26 +65,7 @@ def build_clang_tidy_invocation(args: Namespace, cwd: Path) -> list[str]:
     if args.clang_tidy_check:
         res.append(f"--checks=-*,{args.clang_tidy_check}")
     res.append(args.file.name)
-
-    # Cleanup paths in invocation
-    res = replace_path_in_list(
-        res,
-        args.build_dir,
-        str(cwd),
-    )
-    res = replace_path_in_list(
-        res,
-        args.file,
-        args.file.name,
-    )
-    return [
-        sub(
-            r"-p[ =]?[^ ]*",
-            f"-p {cwd!s}",
-            string,
-        )
-        for string in res
-    ]
+    return res
 
 
 def deduce_crashing_check_from_crash(
@@ -207,6 +189,11 @@ class ClangTidyDriver(Driver):
 
     def setup(self, args: Namespace, cwd: Path) -> None:
         super().setup(args, cwd)
+        self.create_interestingness_test(
+            args,
+            cwd,
+            loads((cwd / "compile_commands.json").read_text())[0],
+        )
 
     def create_interestingness_test(
         self,
@@ -217,24 +204,23 @@ class ClangTidyDriver(Driver):
         compile_command = get_compile_command(compile_command_json["command"], cwd)
 
         file = Path(f"{cwd}/test.sh")
-        file_content: str = "#!/bin/bash\n"
+        file_content: str = "#!/bin/sh\n"
 
         if args.timeout:
             file_content = file_content + f"! timeout {args.timeout} "
-        file_content = str(
-            file_content
-            + compile_command
-            + " -Wfatal-errors -fno-color-diagnostics > log.txt 2>&1",
-        )
+        file_content = str(file_content + compile_command)
 
         clang_tidy_invocation = build_clang_tidy_invocation(args, cwd)
+        log.info(f"clang-tidy invocation: '{' '.join(clang_tidy_invocation)}'")
         write_existing_clang_tidy_config(
             clang_tidy_invocation,
             args.build_dir,
             cwd,
         )
-        crashing_checks = deduce_crashing_check(clang_tidy_invocation, cwd)
-        clang_tidy_invocation.append(f"--checks=-*,{','.join(crashing_checks)}")
+        if args.crash:
+            crashing_checks = deduce_crashing_check(clang_tidy_invocation, cwd)
+            if len(crashing_checks) != 0:
+                clang_tidy_invocation.append(f"--checks=-*,{','.join(crashing_checks)}")
 
         file_content = file_content + " &&"
         if args.timeout:
@@ -242,13 +228,13 @@ class ClangTidyDriver(Driver):
         if args.crash:
             file_content = file_content + " !"
         file_content = str(
-            file_content + f" {' '.join(clang_tidy_invocation)} > log.txt 2>&1\n",
+            file_content + f" {' '.join(clang_tidy_invocation)} > log.txt 2>&1",
         )
         if args.grep:
             file_content = (
                 file_content
-                + f" && python -c \"import re; from pathlib import Path; exit(re.search({args.grep}, Path('log.txt').read_text()) is None)\""
+                + f' && python -c \'import re; from pathlib import Path; exit(re.search("{args.grep}", Path("log.txt").read_text()) is None)\''
             )
 
         file.write_text(file_content)
-        file.chmod(file.stat().st_mode | S_IEXEC)
+        file.chmod(file.stat().st_mode | S_IEXEC | S_IXOTH | S_IROTH | S_IXGRP)
