@@ -7,6 +7,7 @@ from subprocess import call, run
 from typing import Optional
 
 from reducer.lib.driver import Driver
+from reducer.lib.grep import grep_file_content
 from reducer.lib.log import log
 from reducer.lib.setup import (
     get_compile_command,
@@ -172,20 +173,6 @@ class ClangTidyDriver(Driver):
             type=str,
             required=False,
         )
-        parser.add_argument(
-            "--crash",
-            help="If the case to reduce crashes clang-tidy",
-            default=True,
-            type=bool,
-            action=BooleanOptionalAction,
-            required=False,
-        )
-        parser.add_argument(
-            "--grep",
-            help="A regex to search for in all outputs",
-            required=False,
-            type=str,
-        )
 
     def setup(self, args: Namespace, cwd: Path) -> None:
         super().setup(args, cwd)
@@ -231,10 +218,9 @@ class ClangTidyDriver(Driver):
             file_content + f" {' '.join(clang_tidy_invocation)} > log.txt 2>&1",
         )
         if args.grep:
-            file_content = (
-                file_content
-                + f' && python -c \'import re; from pathlib import Path; exit(re.search("{args.grep}", Path("log.txt").read_text()) is None)\''
-            )
+            file_content = file_content + grep_file_content(args.grep, "log.txt")
+        if args.grep_file:
+            file_content = file_content + grep_file_content(args.grep_file, "log.txt")
 
         file.write_text(file_content)
         file.chmod(file.stat().st_mode | S_IEXEC | S_IXOTH | S_IROTH | S_IXGRP)

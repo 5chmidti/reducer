@@ -95,6 +95,26 @@ def init_argparse() -> ArgumentParser:
         type=bool,
         action=BooleanOptionalAction,
     )
+    parser.add_argument(
+        "--crash",
+        help="If the case to reduce crashes the program",
+        default=True,
+        type=bool,
+        action=BooleanOptionalAction,
+        required=False,
+    )
+    parser.add_argument(
+        "--grep",
+        help="A regex to search for in all outputs",
+        required=False,
+        type=str,
+    )
+    parser.add_argument(
+        "--grep-file",
+        help="A regex to search for in the file being reduced",
+        required=False,
+        type=str,
+    )
     return parser
 
 
