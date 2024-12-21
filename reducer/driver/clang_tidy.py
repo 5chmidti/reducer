@@ -204,15 +204,14 @@ class ClangTidyDriver(Driver):
             args.build_dir,
             cwd,
         )
-        if args.crash:
-            crashing_checks = deduce_crashing_check(clang_tidy_invocation, cwd)
-            if len(crashing_checks) != 0:
-                clang_tidy_invocation.append(f"--checks=-*,{','.join(crashing_checks)}")
 
         file_content = file_content + " &&"
         if args.timeout:
             file_content = file_content + f" ! timeout {args.timeout}"
         if args.crash:
+            crashing_checks = deduce_crashing_check(clang_tidy_invocation, cwd)
+            if len(crashing_checks) != 0:
+                clang_tidy_invocation.append(f"--checks=-*,{','.join(crashing_checks)}")
             file_content = file_content + " !"
         file_content = str(
             file_content + f" {' '.join(clang_tidy_invocation)} > log.txt 2>&1",
