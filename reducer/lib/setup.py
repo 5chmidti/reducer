@@ -128,7 +128,7 @@ def get_compile_command(compile_command: str, cwd: Path) -> str:
         .replace("-fcolor-diagnostics", "")
         .replace("-Wdocumentation", "")
         .replace("-fopenmp=libomp", "-fopenmp")
-        + " -Wfatal-errors -fno-color-diagnostics > log.txt 2>&1",
+        + " -Wfatal-errors > compile_log.txt 2>&1",
     )
 
 
