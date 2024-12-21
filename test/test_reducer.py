@@ -9,7 +9,7 @@ from reducer import reducer
 
 class TestReducer(TestCase):
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls) -> None:
         cls.project_dir = Path(__file__).parent / "project"
         cls.build_dir = cls.project_dir / "build"
         if cls.build_dir.exists():
@@ -22,7 +22,7 @@ class TestReducer(TestCase):
         reducer.log.info(build_project)
         call(build_project.split(" "), env=env)
 
-    def do_reduction(self, invocation: list[str]):
+    def do_reduction(self, invocation: list[str]) -> None:
         parser = reducer.init_common_argparse()
         args = parser.parse_args(invocation)
         reducer.log.info(f"{args}")
@@ -32,7 +32,7 @@ class TestReducer(TestCase):
         else:
             reducer.reduce_new(args)
 
-    def test_clang_tidy_contains(self):
+    def test_clang_tidy_contains(self) -> None:
         self.do_reduction(
             [
                 f"{self.project_dir}/src/main.cpp",
@@ -43,7 +43,7 @@ class TestReducer(TestCase):
             ],
         )
 
-    def test_clang_div_by_zero(self):
+    def test_clang_div_by_zero(self) -> None:
         self.do_reduction(
             [
                 f"{self.project_dir}/src/main.cpp",

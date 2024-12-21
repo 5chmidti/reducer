@@ -1,7 +1,7 @@
-from argparse import ArgumentParser, BooleanOptionalAction, Namespace
+from argparse import ArgumentParser, Namespace
 from json import loads
 from pathlib import Path
-from re import findall, match, sub
+from re import findall, match
 from stat import S_IEXEC, S_IROTH, S_IXGRP, S_IXOTH
 from subprocess import call, run
 from typing import Optional
@@ -11,7 +11,6 @@ from reducer.lib.grep import grep_file_content
 from reducer.lib.log import log
 from reducer.lib.setup import (
     get_compile_command,
-    replace_path_in_list,
 )
 
 

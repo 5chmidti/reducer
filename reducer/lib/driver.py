@@ -4,7 +4,6 @@ from shutil import copy
 
 from reducer.lib.setup import (
     get_compile_commands_entry_for_file,
-    preprocess_file,
     write_compile_commands,
 )
 

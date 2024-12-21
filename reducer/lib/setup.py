@@ -1,11 +1,11 @@
 import json
 import re
+import sys
 from argparse import Namespace
 from os import cpu_count
 from pathlib import Path
 from shutil import copy, copyfile
 from subprocess import call, run
-import sys
 from typing import Any
 
 from reducer.lib.log import log
