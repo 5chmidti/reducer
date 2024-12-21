@@ -7,6 +7,7 @@ from shutil import which
 from uuid import uuid4
 
 from reducer.driver.clang_tidy import ClangTidyDriver
+from reducer.lib.driver import Driver
 from reducer.lib.log import log
 from reducer.lib.setup import (
     load_compile_commands,
@@ -117,6 +118,7 @@ def main() -> None:
     parser = ArgumentParser(description="")
     sub_parser = parser.add_subparsers(
         title="Sub-commands",
+        dest="sub",
     )
     ClangTidyDriver().add_arguments(common_parser, sub_parser)
     args = parser.parse_args()
@@ -162,7 +164,15 @@ def main() -> None:
         cwd.mkdir(exist_ok=True, parents=True)
 
     log.info(args)
-    driver = ClangTidyDriver()
+
+    driver: Driver | None = None
+    match args.sub:
+        case "tidy":
+            driver = ClangTidyDriver()
+
+    if driver is None:
+        return
+
     driver.setup(args, cwd)
     reduce(args, cwd)
 
