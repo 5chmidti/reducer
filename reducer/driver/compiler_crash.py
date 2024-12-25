@@ -1,6 +1,6 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from stat import S_IEXEC, S_IROTH, S_IXOTH
+from stat import S_IEXEC, S_IROTH, S_IXGRP, S_IXOTH
 
 from reducer.lib.driver import Driver
 from reducer.lib.grep import grep_file_content
@@ -78,4 +78,4 @@ class CompilerCrashDriver(Driver):
             )
 
         file.write_text(file_content)
-        file.chmod(file.stat().st_mode | S_IEXEC | S_IXOTH | S_IROTH)
+        file.chmod(file.stat().st_mode | S_IEXEC | S_IXOTH | S_IROTH | S_IXGRP)
