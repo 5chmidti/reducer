@@ -130,19 +130,6 @@ def deduce_crashing_check(
     )
 
 
-def reduce_clang_tidy_crash(args: Namespace, reduction_cwd: Path) -> None:
-    clang_tidy_invocation = build_clang_tidy_invocation(args, reduction_cwd)
-    write_existing_clang_tidy_config(
-        clang_tidy_invocation,
-        args.build_dir,
-        reduction_cwd,
-    )
-    crashing_checks = deduce_crashing_check(clang_tidy_invocation, reduction_cwd)
-    if len(crashing_checks) == 0:
-        log.error("Failed to deduce the check that crashes clang-tidy")
-    log.info(f"Deduced that the check that crashes clang-tidy is {crashing_checks}")
-
-
 class ClangTidyDriver(Driver):
     def __init__(self) -> None:
         pass
@@ -211,6 +198,9 @@ class ClangTidyDriver(Driver):
             crashing_checks = deduce_crashing_check(clang_tidy_invocation, cwd)
             if len(crashing_checks) != 0:
                 clang_tidy_invocation.append(f"--checks=-*,{','.join(crashing_checks)}")
+                log.info(
+                    f"Deduced that the check that crashes clang-tidy is {crashing_checks}",
+                )
             file_content = file_content + " !"
         file_content = str(
             file_content + f" {' '.join(clang_tidy_invocation)} > log.txt 2>&1",
