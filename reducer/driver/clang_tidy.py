@@ -213,5 +213,6 @@ class ClangTidyDriver(Driver):
                 cwd / args.file.name,
             )
 
+        log.info(f"interestingness test: '{file_content}'")
         file.write_text(file_content)
         file.chmod(file.stat().st_mode | S_IEXEC | S_IXOTH | S_IROTH | S_IXGRP)

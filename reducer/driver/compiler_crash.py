@@ -4,6 +4,7 @@ from stat import S_IEXEC, S_IROTH, S_IXGRP, S_IXOTH
 
 from reducer.lib.driver import Driver
 from reducer.lib.grep import grep_file_content
+from reducer.lib.log import log
 from reducer.lib.setup import (
     get_compile_command,
 )
@@ -77,5 +78,6 @@ class CompilerCrashDriver(Driver):
                 cwd / args.file.name,
             )
 
+        log.info(f"interestingness test: '{file_content}'")
         file.write_text(file_content)
         file.chmod(file.stat().st_mode | S_IEXEC | S_IXOTH | S_IROTH | S_IXGRP)
