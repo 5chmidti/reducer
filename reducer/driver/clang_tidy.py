@@ -1,7 +1,8 @@
+import sys
 from argparse import ArgumentParser, Namespace
 from json import loads
 from pathlib import Path
-from re import findall, match
+from re import findall, match, search
 from stat import S_IEXEC, S_IROTH, S_IXGRP, S_IXOTH
 from subprocess import call, run
 from typing import Optional
@@ -130,6 +131,29 @@ def deduce_crashing_check(
     )
 
 
+def get_build_dir(args: Namespace) -> Path:
+    if args.build_dir:
+        return args.build_dir
+
+    if args.clang_tidy_invocation is None:
+        log.error(
+            "No '--build-dir' flag or '--clang-tidy-invocation' flag was passed",
+        )
+        sys.exit(1)
+
+    path_str: str | None = search(r"-p[\s=]([^\s])*", args.clang_tidy_invocation).group(
+        1,
+    )
+    if path_str is None:
+        log.error(
+            "No '--build-dir' flag was passed, and the build dir could not be"
+            " deduced from the '--clang-tidy-invocation' flag",
+        )
+        sys.exit(1)
+
+    return Path(path_str)
+
+
 class ClangTidyDriver(Driver):
     def __init__(self) -> None:
         pass
@@ -187,7 +211,7 @@ class ClangTidyDriver(Driver):
         log.info(f"clang-tidy invocation: '{' '.join(clang_tidy_invocation)}'")
         write_existing_clang_tidy_config(
             clang_tidy_invocation,
-            args.build_dir,
+            get_build_dir(args),
             cwd,
         )
 
