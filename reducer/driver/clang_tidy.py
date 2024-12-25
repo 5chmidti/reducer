@@ -210,7 +210,7 @@ class ClangTidyDriver(Driver):
         if args.grep_file:
             file_content = file_content + grep_file_content(
                 args.grep_file,
-                cwd / "log.txt",
+                cwd / args.file.name,
             )
 
         file.write_text(file_content)
