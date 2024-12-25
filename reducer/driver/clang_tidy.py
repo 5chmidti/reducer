@@ -216,9 +216,12 @@ class ClangTidyDriver(Driver):
             file_content + f" {' '.join(clang_tidy_invocation)} > log.txt 2>&1",
         )
         if args.grep:
-            file_content = file_content + grep_file_content(args.grep, "log.txt")
+            file_content = file_content + grep_file_content(args.grep, cwd / "log.txt")
         if args.grep_file:
-            file_content = file_content + grep_file_content(args.grep_file, "log.txt")
+            file_content = file_content + grep_file_content(
+                args.grep_file,
+                cwd / "log.txt",
+            )
 
         file.write_text(file_content)
         file.chmod(file.stat().st_mode | S_IEXEC | S_IXOTH | S_IROTH | S_IXGRP)
