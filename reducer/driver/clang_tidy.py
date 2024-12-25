@@ -194,7 +194,7 @@ class ClangTidyDriver(Driver):
 
         if args.timeout:
             file_content = file_content + f"! timeout {args.timeout} "
-        file_content = str(file_content + compile_command)
+        file_content = file_content + compile_command
 
         clang_tidy_invocation = build_clang_tidy_invocation(args, cwd)
         log.info(f"clang-tidy invocation: '{' '.join(clang_tidy_invocation)}'")

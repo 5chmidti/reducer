@@ -6,7 +6,6 @@ from reducer.lib.driver import Driver
 from reducer.lib.grep import grep_file_content
 from reducer.lib.setup import (
     get_compile_command,
-    remove_explicit_path,
 )
 
 
@@ -43,10 +42,7 @@ class CompilerCrashDriver(Driver):
         cwd: Path,
         compile_command_json: dict[str, str],
     ) -> None:
-        compile_command = get_compile_command(
-            remove_explicit_path(compile_command_json["command"], cwd),
-            cwd,
-        )
+        compile_command = get_compile_command(compile_command_json["command"], cwd)
 
         file = Path(f"{cwd}/test.sh")
         file_content: str = "#!/bin/sh\n"
