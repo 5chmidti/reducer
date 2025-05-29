@@ -11,10 +11,11 @@ from reducer.lib.setup import (
 
 
 class CompilerCrashDriver(Driver):
-    def __init__(self) -> None:
-        pass
+    def __init__(self, args: Namespace, cwd: Path) -> None:
+        super().__init__(args, cwd)
 
-    def add_arguments(self, common_parser: ArgumentParser, sub_parser) -> None:
+    @staticmethod
+    def add_arguments(common_parser: ArgumentParser, sub_parser) -> None:
         parser = sub_parser.add_parser(
             name="compiler-crash",
             help="Reduce a compiler crash",
@@ -33,9 +34,6 @@ class CompilerCrashDriver(Driver):
             required=False,
             type=str,
         )
-
-    def setup(self, args: Namespace, cwd: Path) -> None:
-        super().setup(args, cwd)
 
     def create_interestingness_test(
         self,

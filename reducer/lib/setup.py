@@ -137,8 +137,11 @@ def reduce(args: Namespace, cwd: Path) -> None:
     invocation: list[str] = [args.reduce_bin]
 
     if "cvise" in args.reduce_bin:
+        supported_std = get_csvise_supported_cpp_std(
+            args, get_cpp_std_from_compile_commands(cwd)
+        )
         invocation.append(
-            f"--clang-delta-std={get_csvise_supported_cpp_std(args, get_cpp_std_from_compile_commands(cwd))}",
+            f"--clang-delta-std={supported_std}",
         )
         invocation.append("--to-utf8")
 
@@ -168,11 +171,15 @@ def reduce(args: Namespace, cwd: Path) -> None:
             break
 
         iteration = iteration + 1
-        copyfile(cwd / args.file.name, cwd / (args.file.name + str(iteration)))
+        reduction_iteration_result = cwd / (args.file.name + str(iteration))
+        copyfile(cwd / args.file.name, reduction_iteration_result)
+        log.info(
+            f"Saved reduction result of iteration {iteration} to {reduction_iteration_result}"
+        )
 
     if iteration != -1:
         log.info(
-            f"The final reduction result is in {cwd/args.file.name +str(iteration)}",
+            f"The last reduction result is in {cwd / args.file.name + str(iteration)}",
         )
     else:
-        log.info(f"The reduction result is in {cwd/args.file.name}")
+        log.info(f"The reduction result is in {cwd / args.file.name}")

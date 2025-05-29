@@ -4,7 +4,7 @@ from json import loads
 from pathlib import Path
 from re import findall, match, search
 from stat import S_IEXEC, S_IROTH, S_IXGRP, S_IXOTH
-from subprocess import call, run
+from subprocess import run
 from typing import Optional
 
 from reducer.lib.driver import Driver
@@ -25,7 +25,7 @@ def write_existing_clang_tidy_config(
         if not tidy_config.exists():
             continue
 
-        call(
+        res = run(
             [
                 *clang_tidy_invocation,
                 f"--config-file={tidy_config}",
@@ -33,7 +33,9 @@ def write_existing_clang_tidy_config(
                 ">",
                 f"{reduction_cwd}/.clang-tidy",
             ],
+            check=False,
         )
+        (reduction_cwd / ".clang-tidy").write_bytes(res.stdout)
         return
 
 
@@ -72,15 +74,14 @@ def build_clang_tidy_invocation(args: Namespace, cwd: Path) -> list[str]:
 def deduce_crashing_check_from_crash(
     clang_tidy_invocation: list[str],
     reduction_cwd: Path,
-) -> Optional[str]:
+) -> str | None:
     res = run(
         clang_tidy_invocation,
         cwd=reduction_cwd,
         check=False,
         capture_output=True,
     )
-    stderr = res.stderr.decode()
-    m = match("ASTMatcher: Processing '([^']*)'", stderr)
+    m = match("ASTMatcher: Processing '([^']*)'", res.stderr.decode())
     if m:
         return m.group()
     return None
@@ -141,9 +142,8 @@ def get_build_dir(args: Namespace) -> Path:
         )
         sys.exit(1)
 
-    path_str: str | None = search(r"-p[\s=]([^\s])*", args.clang_tidy_invocation).group(
-        1,
-    )
+    path = search(r"-p[\s=]([^\s])*", args.clang_tidy_invocation)
+    path_str: str | None = path.group(1) if path is not None else None
     if path_str is None:
         log.error(
             "No '--build-dir' flag was passed, and the build dir could not be"
@@ -155,10 +155,16 @@ def get_build_dir(args: Namespace) -> Path:
 
 
 class ClangTidyDriver(Driver):
-    def __init__(self) -> None:
-        pass
+    def __init__(self, args: Namespace, cwd: Path) -> None:
+        super().__init__(args, cwd)
+        self.create_interestingness_test(
+            args,
+            cwd,
+            loads((cwd / "compile_commands.json").read_text())[0],
+        )
 
-    def add_arguments(self, common_parser: ArgumentParser, sub_parser) -> None:
+    @staticmethod
+    def add_arguments(common_parser: ArgumentParser, sub_parser) -> None:
         parser = sub_parser.add_parser(
             name="tidy",
             help="Reduce a clang-tidy invocation",
@@ -182,14 +188,6 @@ class ClangTidyDriver(Driver):
             help="The clang-tidy check that is causing the problem",
             type=str,
             required=False,
-        )
-
-    def setup(self, args: Namespace, cwd: Path) -> None:
-        super().setup(args, cwd)
-        self.create_interestingness_test(
-            args,
-            cwd,
-            loads((cwd / "compile_commands.json").read_text())[0],
         )
 
     def create_interestingness_test(

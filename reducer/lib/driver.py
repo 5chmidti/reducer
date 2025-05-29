@@ -9,10 +9,7 @@ from reducer.lib.setup import (
 
 
 class Driver:
-    def __init__(self) -> None:
-        pass
-
-    def setup(self, args: Namespace, cwd: Path) -> None:
+    def __init__(self, args: Namespace, cwd: Path) -> None:
         compile_commands = get_compile_commands_entry_for_file(
             args.file,
             args.build_dir,

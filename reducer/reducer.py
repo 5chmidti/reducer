@@ -100,7 +100,10 @@ def init_argparse() -> ArgumentParser:
 
 def set_reduce_bin(args: Namespace) -> None:
     if args.reduce_bin:
-        return
+        if which(args.reduce_bin):
+            return
+        log.error(f"Could not find reduction binary '{args.reduce_bin}'")
+        sys.exit(1)
 
     if which("cvise"):
         args.reduce_bin = "cvise"
@@ -121,8 +124,8 @@ def main() -> None:
         title="Sub-commands",
         dest="sub",
     )
-    ClangTidyDriver().add_arguments(common_parser, sub_parser)
-    CompilerCrashDriver().add_arguments(common_parser, sub_parser)
+    ClangTidyDriver.add_arguments(common_parser, sub_parser)
+    CompilerCrashDriver.add_arguments(common_parser, sub_parser)
     args = parser.parse_args()
 
     log.info(args)
@@ -158,14 +161,13 @@ def main() -> None:
     driver: Driver | None = None
     match args.sub:
         case "tidy":
-            driver = ClangTidyDriver()
+            driver = ClangTidyDriver(args, cwd)
         case "compiler-crash":
-            driver = CompilerCrashDriver()
+            driver = CompilerCrashDriver(args, cwd)
 
     if driver is None:
         return
 
-    driver.setup(args, cwd)
     reduce(args, cwd)
 
 
