@@ -1,11 +1,10 @@
 import sys
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser, BooleanOptionalAction, Namespace
 from json import loads
 from pathlib import Path
 from re import findall, match, search
 from stat import S_IEXEC, S_IROTH, S_IXGRP, S_IXOTH
 from subprocess import run
-from typing import Optional
 
 from reducer.lib.driver import Driver
 from reducer.lib.grep import grep_file_content
@@ -34,8 +33,9 @@ def write_existing_clang_tidy_config(
                 f"{reduction_cwd}/.clang-tidy",
             ],
             check=False,
+            capture_output=True,
         )
-        (reduction_cwd / ".clang-tidy").write_bytes(res.stdout)
+        (reduction_cwd / ".clang-tidy").write_bytes(res.stderr)
         return
 
 
@@ -59,11 +59,12 @@ def get_list_of_enabled_checks(
 
 def build_clang_tidy_invocation(args: Namespace, cwd: Path) -> list[str]:
     if args.clang_tidy_invocation:
-        return args.clang_tidy_invocation
+        return args.clang_tidy_invocation.split(" ")
     res = [
         args.clang_tidy_binary,
         "-p",
         str(cwd),
+        "-fix",
     ]
     if args.clang_tidy_check:
         res.append(f"--checks=-*,{args.clang_tidy_check}")
