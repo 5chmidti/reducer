@@ -225,7 +225,11 @@ class ClangTidyDriver(Driver):
                 )
             file_content = file_content + " !"
         file_content = str(
-            file_content + f" {' '.join(clang_tidy_invocation)} > log.txt 2>&1",
+            file_content
+            + " && ".join(
+                f" {' '.join(clang_tidy_invocation)} > log.txt 2>&1 "
+                for _ in range(args.repeat)
+            ),
         )
         if args.grep:
             file_content = file_content + grep_file_content(args.grep, cwd / "log.txt")

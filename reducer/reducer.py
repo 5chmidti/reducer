@@ -95,6 +95,13 @@ def init_argparse() -> ArgumentParser:
         required=False,
         type=str,
     )
+    parser.add_argument(
+        "--repeat",
+        help="Repeat the main part of the interestingness test",
+        type=int,
+        required=False,
+        default=1,
+    )
     return parser
 
 
