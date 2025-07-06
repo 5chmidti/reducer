@@ -94,22 +94,25 @@ def replace_path(string: str, file: Path, new_path_str: str) -> str:
     )
 
 
-def transform_compile_commands(comp_db_entry: str, source_file: Path) -> str:
+def transform_compile_commands(
+    comp_db_entry: str, source_file: Path, extra_args: str
+) -> str:
     comp_db_entry = replace_path(comp_db_entry, source_file, source_file.name)
     comp_db_entry = re.sub(r"-o [^ ]*\.o", "-o output.cpp.o", comp_db_entry)
     comp_db_entry = comp_db_entry.replace("-c ", f"-I{source_file.parent} -c ")
     comp_db_entry = comp_db_entry.replace("-c ", "-Wfatal-errors -c ")
+    comp_db_entry = comp_db_entry.replace("-c ", extra_args + " -c ")
     return re.sub(r"-Werror(=[\w-]*)?", "", comp_db_entry)
 
 
 def get_compile_commands_entry_for_file(  # noqa: ANN201
-    source_file: Path,
-    build_dir: Path,
+    source_file: Path, build_dir: Path, extra_args: str
 ):
     compile_commands_file = build_dir / "compile_commands.json"
     raw_commands = transform_compile_commands(
         compile_commands_file.read_text(),
         source_file,
+        extra_args,
     )
 
     return [x for x in json.loads(raw_commands) if source_file.name in x["file"]]
@@ -158,6 +161,7 @@ def reduce(args: Namespace, cwd: Path) -> None:
     compile_commands = get_compile_commands_entry_for_file(
         args.file,
         cwd,
+        args.extra_args,
     )
     compile_command = compile_commands[0]["command"]
     iteration = -1

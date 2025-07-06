@@ -212,6 +212,8 @@ class ClangTidyDriver(Driver):
         file_content = file_content + compile_command
 
         clang_tidy_invocation = build_clang_tidy_invocation(args, cwd)
+        clang_tidy_invocation.append(f' -extra-arg="{args.extra_args}"')
+
         log.info(f"clang-tidy invocation: '{' '.join(clang_tidy_invocation)}'")
         write_existing_clang_tidy_config(
             clang_tidy_invocation,

@@ -13,6 +13,7 @@ class Driver:
         compile_commands = get_compile_commands_entry_for_file(
             args.file,
             args.build_dir,
+            args.extra_args,
         )
         write_compile_commands(compile_commands, cwd)
         file_path: Path = args.file

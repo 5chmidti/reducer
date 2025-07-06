@@ -96,6 +96,13 @@ def init_argparse() -> ArgumentParser:
         type=str,
     )
     parser.add_argument(
+        "--extra-args",
+        help="Extra arguments to append to the compilation command",
+        required=False,
+        type=str,
+        default="",
+    )
+    parser.add_argument(
         "--repeat",
         help="Repeat the main part of the interestingness test",
         type=int,
