@@ -189,6 +189,12 @@ class ClangTidyDriver(Driver):
             type=str,
             required=False,
         )
+        parser.add_argument(
+            "--require-post-compile",
+            help="Require the applied fixes to compile",
+            required=False,
+            action=BooleanOptionalAction,
+        )
 
     def create_interestingness_test(
         self,
@@ -237,6 +243,11 @@ class ClangTidyDriver(Driver):
             file_content = file_content + grep_file_content(
                 args.grep_file,
                 cwd / args.file.name,
+            )
+
+        if args.require_post_compile:
+            file_content = (
+                file_content + " && " + compile_command + " > post_compile_log.txt 2>&1"
             )
 
         log.info(f"interestingness test: '{file_content}'")
