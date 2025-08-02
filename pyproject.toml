@@ -7,6 +7,10 @@ dependencies = [
     "rich"
 ]
 
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
 [project.scripts]
 reducer = "reducer.reducer:main"
 
